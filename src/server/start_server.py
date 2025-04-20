@@ -8,7 +8,7 @@ from threading import Thread, Event
 import queue
 import time
 from datetime import datetime, timedelta
-from client.server_client import Client
+from server.server_client import Client
 from message.message import TOTAL_BYTES_LENGTH, ErrorCode, Message, MessageType
 from utils.misc import CustomHelpFormatter
 
