@@ -1,6 +1,4 @@
 import time
-from threading import Thread, Event
-import queue
 import logging
 
 logger = logging.getLogger('servidor_udp')
