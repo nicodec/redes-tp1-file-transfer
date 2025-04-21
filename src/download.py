@@ -119,7 +119,7 @@ def start():
                 timeout_exit = False
                 break
             if message:
-                if message.getType() in [MessageType.DATA, MessageType.ACK_DOWNLOAD, MessageType.ERROR, MessageType.END, MessageType.ACK]:
+                if message.get_type() in [MessageType.DATA, MessageType.ACK_DOWNLOAD, MessageType.ERROR, MessageType.END, MessageType.ACK]:
                     message_queue.put(message)
                     timeout = datetime.now() + timedelta(seconds=15)
                 else:

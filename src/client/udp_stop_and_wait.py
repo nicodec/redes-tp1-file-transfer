@@ -21,9 +21,9 @@ def finalizar_cliente(sock, server_addr, msg_queue, stop_event):
             logger.info("Reenviando mensaje de fin al servidor.")
             send_message(end_msg, sock, server_addr)
         response = get_message_from_queue(msg_queue)
-        if response and response.getType() == MessageType.ACK:
+        if response and response.get_type() == MessageType.ACK:
             logger.info("ACK de fin recibido. Finalización completada.")
-            send_ack(response.getSeqNumber(), sock, server_addr)
+            send_ack(response.get_seq_number(), sock, server_addr)
             break
 
 
@@ -40,11 +40,11 @@ def inicio_download_client(client_socket, server_address, first_message,
         if first_message.is_timeout():
             send_message(first_message, client_socket, server_address)
         message = get_message_from_queue(message_queue)
-        if message and message.getType() == MessageType.ACK_DOWNLOAD:
-            logger.info(f'El tamaño del archivo es {message.getFileSize()}')
+        if message and message.get_type() == MessageType.ACK_DOWNLOAD:
+            logger.info(f'El tamaño del archivo es {message.get_file_size()}')
             recibi_ack_o_error = True
-            tamanio_del_archivo = message.getFileSize()
-        elif message and message.getType() == MessageType.ERROR and message.getErrorCode() == ErrorCode.FILE_NOT_FOUND:
+            tamanio_del_archivo = message.get_file_size()
+        elif message and message.get_type() == MessageType.ERROR and message.get_error_code() == ErrorCode.FILE_NOT_FOUND:
             logger.error(f'El archivo que solicite no existe en el servidor')
             recibi_ack_o_error = True
             err = True
@@ -79,8 +79,8 @@ def download_saw_cliente(first_message, client_socket, server_address,
             
         message = get_message_from_queue(message_queue)
 
-        if message and message.getType() == MessageType.DATA and message.getSeqNumber() == 1:
-            datos = message.getData()
+        if message and message.get_type() == MessageType.DATA and message.get_seq_number() == 1:
+            datos = message.get_data()
             recibi_el_primer_paquete = True
             logger.info('Termino el inicio del DOWNLOAD')
             logger.info('Cliente se prepara para el DOWNLOAD')
@@ -103,15 +103,15 @@ def download_saw_cliente(first_message, client_socket, server_address,
         
         # Mando el ack del ultimo paquete que recibi
         if ack_message.is_timeout():
-            logger.debug(f'Envio ACK {ack_message.getSeqNumber()}')
+            logger.debug(f'Envio ACK {ack_message.get_seq_number()}')
             send_message(ack_message, client_socket, server_address)
 
         # espero y recibo el siguiente paquete
         message = get_message_from_queue(message_queue)
 
-        if message and message.getType() == MessageType.DATA and message.getSeqNumber() == ultimo_paquete_recibido + 1:
-            logger.debug(f'Recibo el paquete {message.getSeqNumber()}')
-            datos = message.getData()
+        if message and message.get_type() == MessageType.DATA and message.get_seq_number() == ultimo_paquete_recibido + 1:
+            logger.debug(f'Recibo el paquete {message.get_seq_number()}')
+            datos = message.get_data()
             file.write(datos)
             datos_recibidos = datos_recibidos + len(datos)
             ultimo_paquete_recibido = ultimo_paquete_recibido + 1
@@ -129,12 +129,12 @@ def download_saw_cliente(first_message, client_socket, server_address,
         
         if ack_message.is_timeout():
             send_message(ack_message, client_socket, server_address)
-            logger.info(f'Envio ACK {ack_message.getSeqNumber()}')
+            logger.info(f'Envio ACK {ack_message.get_seq_number()}')
         
         # espero y recibo el fin del download
         message = get_message_from_queue(message_queue)
 
-        if message and message.getType() == MessageType.END:
+        if message and message.get_type() == MessageType.END:
             logger.info('Recibi fin del servidor')
             envie_ultimo_ack_del_paquete = True
             

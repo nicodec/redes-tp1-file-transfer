@@ -10,6 +10,7 @@ import time
 from datetime import datetime, timedelta
 from server.server_client import Client
 from message.message import TOTAL_BYTES_LENGTH, ErrorCode, Message, MessageType
+from server.upd_stop_and_wait import download_saw_server
 from utils.misc import CustomHelpFormatter
 
 # Configuración del logger
@@ -27,12 +28,38 @@ def recv_message(sock, timeout=None):
     except TimeoutError:
         return None, None
 
+def join_worker(worker, client_address, stop_event, file, timeout=1800):
+    worker.join(timeout)  # Timeout de 30 minutos
+    if worker.is_alive():
+        logger.error(f"EL cliente {client_address} ha tardado más de 30 minutos "
+                     f"en responder, desconectando...")
+        stop_event.set()
+    if file:
+        file.close()
+
 def upload(sock, client_address, message, messages_queue, filename, stop_event, protocol):
     pass
 
 def download(sock, client_address, messages_queue, filename, stop_event, protocol):
-    print("Download function not implemented")
-    pass
+    first_message = None
+    file = None
+    
+    if not os.path.exists(filename):
+        logger.error(f"El archivo {filename} no se ha encontrado.")
+        first_message = Message.error(ErrorCode.FILE_NOT_FOUND)
+    else:
+        file = open(filename, "rb")
+        file_size = os.path.getsize(filename)
+        first_message = Message.ack_download(file_size)        
+    recv_protocol = None
+    if protocol == 'udp_saw':
+        recv_protocol = download_saw_server
+    elif protocol == 'udp_sr':
+        print("UDP SR protocol not implemented yet.")
+        #recv_protocol = download_sr_server
+    send_worker = Thread(target=recv_protocol, args=(first_message, sock, client_address, messages_queue, file, filename, stop_event, ))
+    send_worker.start()
+    join_worker(send_worker, client_address, stop_event, file)
 
 def parse_arguments():
     """Parsea los argumentos de línea de comandos"""
@@ -59,7 +86,6 @@ def start_server():
 
     #Namespace(host='127.0.0.1', port=8080, protocol='udp_saw', quiet=False, storage='/tmp/storage', verbose=True)
     path = os.getcwd() + '/server/files'
-
     # Configuración del nivel de logging
     if args.verbose:
         logger.setLevel(logging.DEBUG)
@@ -68,14 +94,15 @@ def start_server():
     else:
         logger.setLevel(logging.INFO)
     
+    path = args.storage
     # Crear directorio de almacenamiento si no existe
-    if not os.path.exists(args.storage):
-        os.makedirs(args.storage)
-        logger.info(f"Directorio de almacenamiento creado: {args.storage}")
+    if not os.path.exists(path):
+        os.makedirs(path)
+        logger.info(f"Directorio de almacenamiento creado: {path}")
 
     protocol = DEFAULT_PROTOCOL
 
-    protocol = args.protocol
+    #protocol = args.protocol
 
     # if args['udp_saw']:
     #     protocol = 'udp_saw'
@@ -91,7 +118,7 @@ def start_server():
     sock.bind(server_address)
     
     logger.info(f"Servidor iniciado en: {server_address}")
-    logger.info(f"Almacenamiento: {args.storage}")
+    logger.info(f"Almacenamiento: {path}")
     logger.info(f"Protocolo: {args.protocol}")
     
     # Diccionario para mantener los clientes conectados
@@ -125,13 +152,13 @@ def start_server():
                     logger.info(f"Cliente {client_address} se ha conectado.")
                     logger.info(f"Archivo a descargar: {message.get_file_name()}")
                     messages_queue = queue.Queue()
-                    filename = path + "/" + message.get_file_name()
+                    filename = os.path.join(path, message.get_file_name())
                     stop_event = Event()
                     download_worker = Thread(target=download, args=(sock, client_address, messages_queue, filename, stop_event, protocol))
                     clients[client_address] = Client(client_address, download_worker, messages_queue, stop_event)
                     clients[client_address].run()
                 
-                elif message.getType() == MessageType.ERROR or message.getType() == MessageType.ACK or message.getType() == MessageType.DATA or message.getType() == MessageType.END or message.getType() == MessageType.ACK_END:
+                elif message.get_type() == MessageType.ERROR or message.get_type() == MessageType.ACK or message.get_type() == MessageType.DATA or message.get_type() == MessageType.END or message.get_type() == MessageType.ACK_END:
                     if (client_address in clients):
                         clients[client_address].add_message(message)
                 else:
