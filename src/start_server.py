@@ -19,10 +19,10 @@ logger = logging.getLogger('servidor_udp')
 DEFAULT_PROTOCOL = 'udp_saw'
 
 def recv_message(sock, timeout=None):
-    socket.settimeout(timeout)
+    sock.settimeout(timeout)
     try:
-        raw_message, address = socket.recvfrom(TOTAL_BYTES_LENGTH)
-        message = Message.fromBytes(raw_message)
+        raw_message, address = sock.recvfrom(TOTAL_BYTES_LENGTH)
+        message = Message.from_bytes(raw_message)
         return message, address
     except TimeoutError:
         return None, None
@@ -31,6 +31,7 @@ def upload(sock, client_address, message, messages_queue, filename, stop_event, 
     pass
 
 def download(sock, client_address, messages_queue, filename, stop_event, protocol):
+    print("Download function not implemented")
     pass
 
 def parse_arguments():
@@ -105,7 +106,7 @@ def start_server():
             if message:
                 # Crear o actualizar cliente
                 if (message.get_type() == MessageType.UPLOAD or message.get_type() == MessageType.DOWNLOAD) and client_address in clients:
-                    clients[client_address].add_message()
+                    clients[client_address].add_message(message)
                     continue
                 
                 logger.info(f"Mensaje recibido desde {client_address}: {message}")

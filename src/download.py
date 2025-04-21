@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import queue
 import socket
 from threading import Event, Thread
+from client.udp_stop_and_wait import download_saw_cliente
 from message.message import Message, MessageType
 from message.utils import recv_message
 from utils.misc import CustomHelpFormatter
@@ -68,16 +69,20 @@ def start():
         download_help()
         return -1
     
-    # Validar y preparar el directorio de destino
-    if not os.path.exists(args.dst):
-        os.makedirs(args.dst)
-        logger.info(f"Directorio de destino creado: {args.dst}")
-    
     # Configuración de parámetros
     host = args.host
     port = args.port
+    path = args.dst
+    download_file_name = args.name
     protocol = args.protocol
-    filename = os.path.join(args.dst, args.name)
+
+    # Validar y preparar el directorio de destino
+    if not os.path.exists(path):
+        os.makedirs(path)
+        logger.info(f"Directorio de destino creado: {path}")
+
+    filename = os.path.join(path, download_file_name)
+    file = open(filename, "wb")
 
     logger.info(f"Conectando al servidor {host}:{port}")
     logger.info(f"Protocolo seleccionado: {protocol}")
@@ -99,8 +104,9 @@ def start():
     # Seleccionar protocolo de recepción
     #recv_protocol = download_sr_cliente if protocol == "udp_sr" else download_saw_cliente
     
+    #por ahora hardocdeo a stop and wait
     recv_protocol = download_saw_cliente
-    recv_worker = Thread(target=recv_protocol, args=(download_message, sock, server_address, message_queue, filename, stop_event))
+    recv_worker = Thread(target=recv_protocol, args=(download_message, sock, server_address, message_queue, file, filename, stop_event))
     recv_worker.start()
 
     # Manejo de timeout
@@ -122,6 +128,8 @@ def start():
         except KeyboardInterrupt:
             stop_event.set()
             logger.info("Se ha interrumpido la transferencia.")
+            if file:
+                file.close()
             sock.close()
             return -1
 
@@ -130,7 +138,8 @@ def start():
         logger.error("No se ha recibido respuesta del servidor.")
     else:
         logger.info(f"Tiempo de transferencia: {datetime.now() - start_time}")
-
+    if file:
+        file.close()
     sock.close()
     return 0
 
