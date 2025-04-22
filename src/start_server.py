@@ -88,6 +88,7 @@ def download(sock, client_address, messages_queue,
     if protocol == 'udp_saw':
         recv_protocol = download_saw_server
     elif protocol == 'udp_sr':
+        # recv_protocol = download_sr_server
         print("UDP SR protocol not implemented yet.")
 
     send_worker = Thread(target=recv_protocol,
@@ -104,11 +105,11 @@ def parse_arguments():
     verbosity_group.add_argument("-v", "--verbose", action="store_true", help="increase output verbosity")
     verbosity_group.add_argument("-q", "--quiet", action="store_true", help="decrease output verbosity")
     parser.add_argument("-H", "--host", metavar="ADDR", type=str, help="service IP address", default="localhost")
-    parser.add_argument("-p", "--port", type=int, help="service port", default=3333)
+    parser.add_argument("-p", "--port", type=int, help="service port", default=8888)
     parser.add_argument("-s", "--storage", metavar="DIRPATH", type=str, help="storage dir path", 
                         default=os.getcwd() + '/server/files')
     parser.add_argument("-r", "--protocol", metavar="protocol", type=str, help="error recovery protocol",
-                        default="udp_basic", choices=["udp_basic", "udp_saw", "udp_sr"])
+                        default=DEFAULT_PROTOCOL, choices=["udp_saw", "udp_sr"])
 
     parser.usage = parser.format_usage()
     for a in parser._actions:
@@ -136,14 +137,7 @@ def start_server():
         os.makedirs(path)
         logger.info(f"Directorio de almacenamiento creado: {path}")
 
-    protocol = DEFAULT_PROTOCOL
-
-    # protocol = args.protocol
-    # if args['udp_saw']:
-    #     protocol = 'udp_saw'
-
-    # if args['udp_sr']:
-    #     protocol = 'udp_sr'
+    protocol = args.protocol if args.protocol else DEFAULT_PROTOCOL
 
     # Crear socket UDP
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

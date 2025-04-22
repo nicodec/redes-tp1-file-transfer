@@ -41,7 +41,7 @@ def parse_arguments():
     parser.add_argument("-n", "--name", metavar="FILENAME", type=str, required=True, help="file name")
     
     parser.add_argument("-r", "--protocol", metavar="protocol", type=str, help="error recovery protocol", 
-                        default="udp_basic", choices=["udp_basic", "udp_saw", "udp_sr"])
+                        default=DEFAULT_PROTOCOL, choices=["udp_saw", "udp_sr"])
     
     parser.usage = parser.format_usage()
     for a in parser._actions:
@@ -103,6 +103,7 @@ def start():
     
     #por ahora hardocdeo a stop and wait
     recv_protocol = download_saw_cliente
+    
     recv_worker = Thread(target=recv_protocol, args=(download_message, sock, server_address, message_queue, file, stop_event))
     recv_worker.start()
 
