@@ -1,5 +1,6 @@
 import argparse
 from datetime import datetime, timedelta
+import logging
 import queue
 import socket
 from threading import Event, Thread
@@ -7,12 +8,8 @@ from client.udp_stop_and_wait import download_saw_cliente
 from message.message import Message, MessageType
 from message.utils import recv_message
 from utils.misc import CustomHelpFormatter
-import logging
+from utils.logger import logger
 import os
-
-# Configuración del logger
-logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger('cliente_udp')
 
 DEFAULT_PROTOCOL = 'udp_saw'
 
@@ -106,7 +103,7 @@ def start():
     
     #por ahora hardocdeo a stop and wait
     recv_protocol = download_saw_cliente
-    recv_worker = Thread(target=recv_protocol, args=(download_message, sock, server_address, message_queue, file, filename, stop_event))
+    recv_worker = Thread(target=recv_protocol, args=(download_message, sock, server_address, message_queue, file, stop_event))
     recv_worker.start()
 
     # Manejo de timeout

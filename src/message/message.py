@@ -1,8 +1,7 @@
 from enum import Enum
 import logging
 from datetime import datetime, timedelta
-
-logger = logging.getLogger('servidor_udp')
+from utils.logger import logger
 
 SEQUENCE_NUMBER_BYTES = 4
 DATA_MAX_SIZE = 2048
@@ -22,6 +21,7 @@ class ErrorCode(Enum):
     FILE_NOT_FOUND = 0
     FILE_TOO_BIG = 1
     FILE_ALREADY_EXISTS = 2
+    FILE_WRITE_ERROR = 3
 
 class Message:
     def __init__(self, msg_type, seq_number=0, data=None, timeout=0):

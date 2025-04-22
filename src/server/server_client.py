@@ -1,7 +1,6 @@
 import time
 import logging
-
-logger = logging.getLogger('servidor_udp')
+from utils.logger import logger
 
 class Client:
     """Clase para manejar la conexión con un cliente"""

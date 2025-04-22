@@ -2,9 +2,7 @@ from datetime import datetime, timedelta
 import logging
 from random import randint
 from message.message import TOTAL_BYTES_LENGTH, Message
-
-logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger('cliente_udp')
+from utils.logger import logger
 
 def send_ack(secNumber, socket, address):
     ack_message = Message.ack(secNumber)

@@ -7,14 +7,12 @@ from threading import Thread, Event
 import queue
 from server.server_client import Client
 from message.message import TOTAL_BYTES_LENGTH, ErrorCode, Message, MessageType
-from server.upd_stop_and_wait import download_saw_server
+from server.upd_stop_and_wait import download_saw_server, upload_saw_server
 from utils.misc import CustomHelpFormatter
-
-# Configuración del logger
-logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger('servidor_udp')
+from utils.logger import logger
 
 DEFAULT_PROTOCOL = 'udp_saw'
+MAX_FILE_SIZE = 1024 * 1024 * 100  # 100 MB
 
 def recv_message(sock, timeout=None):
     sock.settimeout(timeout)
@@ -35,7 +33,34 @@ def join_worker(worker, client_address, stop_event, file, timeout=1800):
         file.close()
 
 def upload(sock, client_address, message, messages_queue, filename, stop_event, protocol):
-    pass
+    file = None
+    initial_message = message
+
+    if os.path.exists(filename):
+        logger.error(f"El archivo {filename} ya existe en el servidor.")
+        initial_message = Message.error(ErrorCode.FILE_ALREADY_EXISTS)
+    elif message.get_file_size() > MAX_FILE_SIZE:
+        logger.error(f"El tamaño del archivo {filename} excede el límite permitido.")
+        initial_message = Message.error(ErrorCode.FILE_TOO_BIG)
+    else:
+        try:
+            file = open(filename, "ab")
+        except IOError as e:
+            logger.error(f"No se pudo abrir el archivo {filename} para escritura: {e}")
+            initial_message = Message.error(ErrorCode.FILE_WRITE_ERROR)
+
+    protocol_handler = None
+    if protocol == 'udp_saw':
+        protocol_handler = upload_saw_server
+    elif protocol == 'udp_sr':
+        print("UDP SR protocol not implemented yet.")
+        # protocol_handler = upload_sr_server
+
+    if protocol_handler:
+        worker_thread = Thread(target=protocol_handler, args=(initial_message, sock, client_address, messages_queue, file, filename, stop_event))
+        worker_thread.start()
+        join_worker(worker_thread, client_address, stop_event, file)
+
 
 def download(sock, client_address, messages_queue, filename, stop_event, protocol):
     first_message = None
@@ -83,7 +108,7 @@ def start_server():
 
     #Namespace(host='127.0.0.1', port=8080, protocol='udp_saw', quiet=False, storage='/tmp/storage', verbose=True)
     path = os.getcwd() + '/server/files'
-    # Configuración del nivel de logging
+
     if args.verbose:
         logger.setLevel(logging.DEBUG)
     elif args.quiet:
@@ -109,8 +134,6 @@ def start_server():
     
     # Crear socket UDP
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    
-    # Enlazar socket
     server_address = (args.host, args.port)
     sock.bind(server_address)
     
@@ -133,15 +156,16 @@ def start_server():
                     clients[client_address].add_message(message)
                     continue
                 
-                logger.info(f"Mensaje recibido desde {client_address}: {message}")
+                #logger.info(f"Mensaje recibido desde {client_address}: {message}")
                 
                 # Procesar el mensaje según su tipo
                 if message.get_type() == MessageType.UPLOAD:
+                    logger.info(f"Cliente {client_address} se ha conectado.")
                     logger.info(f"Solicitud de subida de archivo: {message.get_file_name()}")
                     messages_queue = queue.Queue()
-                    filename = path + "/" + message.get_file_name()
+                    filename = os.path.join(path, message.get_file_name())
                     stop_event = Event()
-                    upload_worker = Thread(target=upload, args=(sock, client_address, message, messages_queue, filename, stop_event, protocol ))
+                    upload_worker = Thread(target=upload, args=(sock, client_address, message, messages_queue, filename, stop_event, protocol))
                     clients[client_address] = Client(client_address, upload_worker, messages_queue, stop_event)
                     clients[client_address].run()
                 

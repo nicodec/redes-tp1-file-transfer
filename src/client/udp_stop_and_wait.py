@@ -3,11 +3,11 @@ from socket import *
 from message.message import DATA_MAX_SIZE, Message, MessageType, ErrorCode
 from datetime import datetime, timedelta
 from message.utils import send_message, send_ack, get_message_from_queue, show_info
+from utils.logger import logger
 
 DATA_MAX_SIZE = DATA_MAX_SIZE
 
-logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger('cliente_udp')
+
 
 
 def finalizar_cliente(sock, server_addr, msg_queue, stop_event):
@@ -27,6 +27,9 @@ def finalizar_cliente(sock, server_addr, msg_queue, stop_event):
             break
 
 
+########################
+## CASO PARA DOWNLOAD ##
+########################
 def inicio_download_client(client_socket, server_address, first_message,
                            message_queue, stop_event):
     logger.info(f'Enviando mensaje de DOWNLOAD al servidor: {first_message}')
@@ -57,10 +60,8 @@ def inicio_download_client(client_socket, server_address, first_message,
     return err, tamanio_del_archivo
 
 
-# caso download
-
 def download_saw_cliente(first_message, client_socket, server_address,
-                         message_queue, file, filename, stop_event):
+                         message_queue, file, stop_event):
     start_time = datetime.now()
     err, tamanio_del_archivo = inicio_download_client(client_socket, server_address, first_message, message_queue, stop_event)
     
@@ -144,3 +145,80 @@ def download_saw_cliente(first_message, client_socket, server_address,
             logger.info('Termino fin del download')
 
 
+######################
+## CASO PARA UPLOAD ##
+######################
+def inicio_upload_client(client_socket, server_address, mensaje_inicial, msg_queue, stop_event):
+    """Inicia el protocolo de subida enviando el mensaje inicial y manejando errores."""
+    logger.info("Enviando mensaje de inicio de upload al servidor.")
+    ack_o_error_recibido = False
+
+    while not ack_o_error_recibido:
+        if stop_event.is_set():
+            return True
+        if mensaje_inicial.is_timeout():
+            logger.debug("Reenviando mensaje de inicio de upload.")
+            send_message(mensaje_inicial, client_socket, server_address)
+
+        respuesta = get_message_from_queue(msg_queue)
+        if respuesta:
+            # Manejo de errores
+            if respuesta.get_type() == MessageType.ERROR:
+                if respuesta.get_error_code() == ErrorCode.FILE_TOO_BIG:
+                    logger.error("El archivo es demasiado grande para ser subido.")
+                elif respuesta.get_error_code() == ErrorCode.FILE_ALREADY_EXISTS:
+                    logger.error("El archivo ya existe en el servidor.")
+                ack_o_error_recibido = True
+                logger.info("Finalizando el protocolo de upload debido a un error.")
+                finalizar_cliente(client_socket, server_address, msg_queue, stop_event)
+                return True
+
+            # Caso de ACK recibido
+            if respuesta.get_type() == MessageType.ACK and respuesta.get_seq_number() == 0:
+                logger.info("ACK inicial recibido del servidor.")
+                send_ack(respuesta.get_seq_number(), client_socket, server_address)
+                ack_o_error_recibido = True
+
+    logger.info("Inicio del protocolo de upload completado.")
+    return False
+
+
+def upload_saw_client(mensaje_inicial, client_socket, server_address, msg_queue, archivo, stop_event):
+    """Implementa el protocolo Stop-and-Wait para la subida de archivos."""
+    inicio = datetime.now()
+    error_detectado = inicio_upload_client(client_socket, server_address, mensaje_inicial, msg_queue, stop_event)
+
+    if error_detectado:
+        return
+
+    logger.info("Preparando el cliente para subir el archivo.")
+    siguiente_actualizacion = inicio + timedelta(seconds=1)
+    secuencia = 1
+    bytes_enviados = 0
+
+    while datos := archivo.read(DATA_MAX_SIZE):
+        siguiente_actualizacion = show_info(mensaje_inicial.get_file_size(), bytes_enviados, inicio, siguiente_actualizacion)
+        ack_recibido = False
+
+        if stop_event.is_set():
+            return
+
+        paquete = Message.data(secuencia, datos)
+        while not ack_recibido:
+            if stop_event.is_set():
+                return
+            if paquete.is_timeout():
+                logger.debug(f"Reenviando paquete {secuencia}.")
+                send_message(paquete, client_socket, server_address)
+
+            respuesta = get_message_from_queue(msg_queue)
+            if respuesta and respuesta.get_type() == MessageType.ACK and respuesta.get_seq_number() == secuencia:
+                logger.debug(f"ACK recibido para el paquete {secuencia}.")
+                bytes_enviados += len(datos)
+                secuencia += 1
+                ack_recibido = True
+
+    logger.info("Archivo enviado exitosamente.")
+    logger.info("Iniciando proceso de finalización del upload.")
+    finalizar_cliente(client_socket, server_address, msg_queue, stop_event)
+    logger.info("Proceso de upload finalizado.")
