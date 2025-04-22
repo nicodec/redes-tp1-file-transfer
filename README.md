@@ -14,8 +14,9 @@ python3 src/download.py -H localhost -p 3333 -d src/client/files -n prueba.txt -
 
 - Cliente de upload:
 ```
-```
 python3 src/upload.py -H localhost -p 3333 -s src/client/files -n img-5mb.jpg -r udp_saw
+```
+
 ---
 
 ## Selective Repeat
