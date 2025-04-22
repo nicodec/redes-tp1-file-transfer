@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
-import logging
 from message.message import DATA_MAX_SIZE, Message, MessageType
-from message.utils import send_message, send_ack, get_message_from_queue, show_info
+from message.utils import (
+    send_message, send_ack, get_message_from_queue, show_info
+)
 import os
 from utils.logger import logger
 
@@ -9,7 +10,8 @@ DATA_MAX_SIZE = DATA_MAX_SIZE
 
 
 def finalizar_servidor(sock, client_address, msg_queue, stop_event):
-    """Finaliza la conexión con el cliente enviando un ACK al recibir un mensaje END."""
+    """Finaliza la conexión con el cliente enviando un ACK al recibir
+    un mensaje END."""
     logger.info("Iniciando proceso de finalización con el cliente.")
     ack_message = Message.ack(0)
     message = get_message_from_queue(msg_queue)
@@ -50,7 +52,9 @@ def inicio_download_server(sock, client_address, first_message, msg_queue, stop_
     return error_detectado
 
 
-def download_saw_server(first_message, sock, client_address, msg_queue, file, filename, stop_event):
+def download_saw_server(first_message, sock,
+                        client_address, msg_queue,
+                        file, stop_event):
     """Implementa el protocolo Stop-and-Wait para la descarga de archivos."""
     start_time = datetime.now()
     error_detectado = inicio_download_server(sock, client_address, first_message, msg_queue, stop_event)
@@ -211,7 +215,8 @@ def upload_saw_server(mensaje_inicial, sock, client_address, msg_queue, file, fi
                     datos = mensaje.get_data()
                     buffer_datos.append(datos)
 
-                    # Escribir en el archivo si el buffer alcanza un tamaño considerable
+                    # Escribir en el archivo si el buffer
+                    # alcanza un tamaño considerable
                     if sum(len(chunk) for chunk in buffer_datos) > 50000:
                         file.write(b"".join(buffer_datos))
                         buffer_datos.clear()
@@ -230,7 +235,6 @@ def upload_saw_server(mensaje_inicial, sock, client_address, msg_queue, file, fi
     logger.info("Iniciando proceso de finalización de la subida.")
     finalizar_servidor(sock, client_address, msg_queue, stop_event)
     logger.info("Proceso de subida finalizado.")
-    
-    # Make sure to close the file
+
     if file:
         file.close()

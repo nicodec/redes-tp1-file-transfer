@@ -9,13 +9,13 @@ python3 src/start_server.py -H localhost -p 3333 -r udp_saw -s src/server/files/
 
 - Cliente de download:
 ```
-python3 src/download.py -H localhost -p 3333 -d src/client/files -n prueba-download.txt -r udp_saw
+python3 src/download.py -H localhost -p 3333 -d src/client/files -n prueba.txt -r udp_saw
 ```
 
 - Cliente de upload:
 ```
 ```
-python3 src/upload.py -H localhost -p 3333 -s src/client/files -n prueba-5mb.jpg -r udp_saw
+python3 src/upload.py -H localhost -p 3333 -s src/client/files -n img-5mb.jpg -r udp_saw
 ---
 
 ## Selective Repeat

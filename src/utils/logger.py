@@ -1,5 +1,6 @@
 import logging
 
+
 class ColorLogFormatter(logging.Formatter):
     # ANSI escape sequences para colores
     COLORS = {
@@ -21,6 +22,7 @@ class ColorLogFormatter(logging.Formatter):
         )
         formatter = logging.Formatter(log_format, datefmt='%H:%M:%S')
         return formatter.format(record)
+
 
 # Configuramos el logger
 logger = logging.getLogger("Tp1 Redes")

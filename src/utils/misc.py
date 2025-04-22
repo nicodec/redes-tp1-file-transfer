@@ -1,5 +1,6 @@
 import argparse
 
+
 class CustomHelpFormatter(argparse.HelpFormatter):
     def _format_action_invocation(self, action):
         if action.metavar == '\b':
