@@ -1,4 +1,3 @@
-import logging
 from socket import *
 from message.message import DATA_MAX_SIZE, Message, MessageType, ErrorCode
 from datetime import datetime, timedelta
@@ -6,9 +5,6 @@ from message.utils import send_message, send_ack, get_message_from_queue, show_i
 from utils.logger import logger
 
 DATA_MAX_SIZE = DATA_MAX_SIZE
-
-
-
 
 def finalizar_cliente(sock, server_addr, msg_queue, stop_event):
     """
