@@ -156,7 +156,7 @@ def start_server():
                     clients[client_address].add_message(message)
                     continue
                 
-                #logger.info(f"Mensaje recibido desde {client_address}: {message}")
+                # logger.info(f"Mensaje recibido desde {client_address}: {message}")
                 
                 # Procesar el mensaje según su tipo
                 if message.get_type() == MessageType.UPLOAD:

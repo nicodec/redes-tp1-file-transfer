@@ -177,9 +177,10 @@ def upload_saw_server(mensaje_inicial, sock, client_address, msg_queue, file, fi
     bytes_recibidos = 0
     secuencia_actual = 1
     proxima_actualizacion = inicio + timedelta(seconds=1)
+    
+    buffer_datos = []
 
     while bytes_recibidos < mensaje_inicial.get_file_size():
-        buffer_datos = []
         proxima_actualizacion = show_info(mensaje_inicial.get_file_size(), bytes_recibidos, inicio, proxima_actualizacion)
 
         if stop_event.is_set():
@@ -211,10 +212,9 @@ def upload_saw_server(mensaje_inicial, sock, client_address, msg_queue, file, fi
                     buffer_datos.append(datos)
 
                     # Escribir en el archivo si el buffer alcanza un tamaño considerable
-                    if len(buffer_datos) > 50000:
-                        file.write(buffer_datos)
+                    if sum(len(chunk) for chunk in buffer_datos) > 50000:
+                        file.write(b"".join(buffer_datos))
                         buffer_datos.clear()
-                        buffer_datos = []
 
                     bytes_recibidos += len(datos)
                     logger.debug(f"Enviando ACK para el paquete {mensaje.get_seq_number()}.")
@@ -222,11 +222,15 @@ def upload_saw_server(mensaje_inicial, sock, client_address, msg_queue, file, fi
                     secuencia_actual += 1
                     paquete_recibido = True
 
-    # # Escribir cualquier dato restante en el buffer
-    # if buffer_datos:
-    #     file.write(b"".join(buffer_datos))
+    # Escribir cualquier dato restante en el buffer
+    if buffer_datos:
+        file.write(b"".join(buffer_datos))
 
     logger.info("Archivo recibido exitosamente.")
     logger.info("Iniciando proceso de finalización de la subida.")
     finalizar_servidor(sock, client_address, msg_queue, stop_event)
     logger.info("Proceso de subida finalizado.")
+    
+    # Make sure to close the file
+    if file:
+        file.close()
