@@ -4,7 +4,7 @@ import logging
 import queue
 import socket
 from threading import Event, Thread
-from client.udp_stop_and_wait import download_saw_cliente
+from client.udp_stop_and_wait.download import download_saw_cliente
 from message.message import Message, MessageType
 from message.utils import recv_message
 from utils.misc import CustomHelpFormatter
