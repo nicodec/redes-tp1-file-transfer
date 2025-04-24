@@ -94,7 +94,7 @@ def download(sock, client_address, messages_queue,
 
     send_worker = Thread(target=recv_protocol,
                          args=(first_message, sock, client_address,
-                               messages_queue, file, stop_event, ))
+                               messages_queue, file, stop_event))
     send_worker.start()
     join_worker(send_worker, client_address, stop_event, file)
 
