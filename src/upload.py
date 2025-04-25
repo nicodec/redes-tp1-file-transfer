@@ -5,7 +5,7 @@ import os
 import queue
 import socket
 from threading import Event, Thread
-from client.udp_stop_and_wait import upload_saw_client
+from client.udp_stop_and_wait.upload import upload_saw_client
 from message.message import Message, MessageType
 from message.utils import recv_message
 from utils.misc import CustomHelpFormatter

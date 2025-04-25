@@ -7,7 +7,8 @@ from threading import Thread, Event
 import queue
 from server.server_client import Client
 from message.message import TOTAL_BYTES_LENGTH, ErrorCode, Message, MessageType
-from server.upd_stop_and_wait import download_saw_server, upload_saw_server
+from server.udp_stop_and_wait.upload import upload_saw_server
+from server.udp_stop_and_wait.download import download_saw_server
 from utils.misc import CustomHelpFormatter
 from utils.logger import logger
 
