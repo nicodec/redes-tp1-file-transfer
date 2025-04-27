@@ -10,6 +10,7 @@ from message.message import Message, MessageType
 from message.utils import recv_message
 from utils.misc import CustomHelpFormatter
 from utils.logger import logger
+from udp_selective_repeat.udp_selective_repeat import send_protocol as upload_sr_client
 
 DEFAULT_PROTOCOL = 'udp_saw'
 
@@ -102,10 +103,7 @@ def start():
     stop_event = Event()
 
     # Seleccionar protocolo de envío
-    #send_protocol = upload_sr_cliente if protocol == "udp_sr" else upload_saw_cliente
-    
-    # Por ahora hardcodeo a stop and wait
-    send_protocol = upload_saw_client
+    send_protocol = upload_sr_client if protocol == "udp_sr" else upload_saw_client
     
     send_worker = Thread(target=send_protocol, args=(upload_message, sock, server_address, message_queue, file, stop_event))
     send_worker.start()
@@ -120,7 +118,7 @@ def start():
                 timeout_exit = False
                 break
             if message:
-                if message.get_type() in [MessageType.ACK, MessageType.ERROR, MessageType.END, MessageType.DATA]:
+                if message.get_type() in [MessageType.ACK, MessageType.ERROR, MessageType.END, MessageType.DATA, MessageType.ACK_END]:
                     message_queue.put(message)
                     timeout = datetime.now() + timedelta(seconds=15)
                 else:

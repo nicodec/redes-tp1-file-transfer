@@ -22,12 +22,15 @@ python3 src/upload.py -H localhost -p 8888 -s src/client/files -n img-5mb.jpg -r
 ## Selective Repeat
 - Servidor:
 ```
+python3 src/start_server.py -H localhost -p 8888 -r udp_sr -s src/server/files/udp_sr
 ```
 
 - Cliente de download:
 ```
+python3 src/download.py -H localhost -p 8888 -d src/client/files -n img-4mb.jpg -r udp_sr
 ```
 
 - Cliente de upload:
 ```
+python3 src/upload.py -H localhost -p 8888 -s src/client/files -n img-3mb.jpg -r udp_sr
 ```

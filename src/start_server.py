@@ -10,6 +10,7 @@ from server.server_client import Client
 from message.message import TOTAL_BYTES_LENGTH, ErrorCode, Message, MessageType
 from server.udp_stop_and_wait.upload import upload_saw_server
 from server.udp_stop_and_wait.download import download_saw_server
+from udp_selective_repeat.udp_selective_repeat import recv_protocol as upload_sr_server, send_protocol as download_sr_server
 from utils.misc import CustomHelpFormatter
 from utils.logger import logger
 
@@ -71,8 +72,7 @@ def upload(sock, client_address,
     if protocol == 'udp_saw':
         protocol_handler = upload_saw_server
     elif protocol == 'udp_sr':
-        print("UDP SR protocol not implemented yet.")
-        # protocol_handler = upload_sr_server
+        protocol_handler = upload_sr_server
 
     if protocol_handler:
         worker_thread = Thread(target=protocol_handler,
@@ -99,8 +99,7 @@ def download(sock, client_address, messages_queue,
     if protocol == 'udp_saw':
         recv_protocol = download_saw_server
     elif protocol == 'udp_sr':
-        # recv_protocol = download_sr_server
-        print("UDP SR protocol not implemented yet.")
+        recv_protocol = download_sr_server
 
     send_worker = Thread(target=recv_protocol,
                          args=(first_message, sock, client_address,

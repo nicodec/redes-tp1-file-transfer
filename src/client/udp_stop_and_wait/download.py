@@ -36,8 +36,8 @@ def inicio_download_client(client_socket, server_address, first_message,
     return err, tamanio_del_archivo
 
 
-def download_saw_cliente(first_message, client_socket, server_address,
-                         message_queue, file, stop_event):
+def download_saw_client(first_message, client_socket, server_address,
+                         message_queue, file, filename, stop_event):
     start_time = datetime.now()
     err, tamanio_del_archivo = inicio_download_client(client_socket, server_address, first_message, message_queue, stop_event)
     

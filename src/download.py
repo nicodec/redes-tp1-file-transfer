@@ -4,7 +4,8 @@ import logging
 import queue
 import socket
 from threading import Event, Thread
-from client.udp_stop_and_wait.download import download_saw_cliente
+from client.udp_stop_and_wait.download import download_saw_client
+from udp_selective_repeat.udp_selective_repeat import recv_protocol as download_sr_client
 from message.message import Message, MessageType
 from message.utils import recv_message
 from utils.misc import CustomHelpFormatter
@@ -99,12 +100,9 @@ def start():
     stop_event = Event()
 
     # Seleccionar protocolo de recepción
-    #recv_protocol = download_sr_cliente if protocol == "udp_sr" else download_saw_cliente
+    recv_protocol = download_sr_client if protocol == "udp_sr" else download_saw_client
     
-    #por ahora hardocdeo a stop and wait
-    recv_protocol = download_saw_cliente
-    
-    recv_worker = Thread(target=recv_protocol, args=(download_message, sock, server_address, message_queue, file, stop_event))
+    recv_worker = Thread(target=recv_protocol, args=(download_message, sock, server_address, message_queue, file, filename, stop_event))
     recv_worker.start()
 
     # Manejo de timeout
