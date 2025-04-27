@@ -43,7 +43,7 @@ def send_first_download_message(message, socket, address, message_queue, stop_ev
     if download_response.get_type() == MessageType.ACK_DOWNLOAD:
         return send_message_and_wait(Message.ack(download_response.get_seq_number()), socket, address, message_queue, stop_event, [MessageType.DATA]), download_response
     elif download_response.get_type() == MessageType.ERROR:
-        if download_response.getErrorCode() == ErrorCode.FILE_NOT_FOUND:
+        if download_response.get_error_code() == ErrorCode.FILE_NOT_FOUND:
             logger.error(f"El archivo no se ha encontrado en el servidor")
         return send_message_and_wait(Message.ack(download_response.get_seq_number()), socket, address, message_queue, stop_event, [MessageType.ACK]), download_response
 
@@ -88,9 +88,9 @@ def send_first_upload_message(message, socket, address, message_queue, stop_even
     if upload_response.get_type() == MessageType.ACK:
         return upload_response
     elif upload_response.get_type() == MessageType.ERROR:
-        if upload_response.getErrorCode() == ErrorCode.FILE_ALREADY_EXISTS:
+        if upload_response.get_error_code() == ErrorCode.FILE_ALREADY_EXISTS:
             logger.error(f"El archivo ya existe en el servidor")
-        elif upload_response.getErrorCode() == ErrorCode.FILE_TOO_BIG:
+        elif upload_response.get_error_code() == ErrorCode.FILE_TOO_BIG:
             logger.error(f"El archivo es muy grande, no se puede cargar")
         send_message_and_wait(Message.ack(upload_response.get_seq_number()), socket, address, message_queue, stop_event, [MessageType.ACK])
         return upload_response
