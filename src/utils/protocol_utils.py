@@ -1,5 +1,3 @@
-from datetime import datetime, timedelta
-
 from message.message import DATA_MAX_SIZE, Message, MessageType, ErrorCode
 from message.utils import send_ack, send_message, send_message_and_retry, send_message_and_wait
 from utils.logger import logger
