@@ -41,10 +41,15 @@ def get_message_from_queue(message_queue):
     return message_queue.get(False) if not message_queue.empty() else None
 
 
-def show_info(total, parcial, start_time, next_update):
-    if datetime.now() > next_update:
-        logger.info(f"Total: {total} bytes, Partial: {parcial} bytes, Time: {datetime.now() - start_time}")
-        return datetime.now() + timedelta(seconds=1)
+def show_info(total_size, current_size, start_time, next_update):
+    now = datetime.now()
+    if now >= next_update:
+        elapsed_time = (now - start_time).total_seconds()
+        speed = current_size / elapsed_time if elapsed_time > 0 else 0
+        percentage = (current_size / total_size) * 100 if total_size > 0 else 0
+        
+        logger.info(f"Progress: {percentage:.2f}% - Speed: {speed:.2f} bytes/sec")
+        return now + timedelta(seconds=1)
     return next_update
 
 
