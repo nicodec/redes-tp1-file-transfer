@@ -9,8 +9,7 @@ from server.server_client import Client
 from message.message import TOTAL_BYTES_LENGTH, ErrorCode, Message, MessageType
 from server.udp_stop_and_wait.upload import upload_saw_server
 from server.udp_stop_and_wait.download import download_saw_server
-from server.udp_selective_repeat.upload import upload_sr_server
-from server.udp_selective_repeat.download import download_sr_server
+from udp_selective_repeat.udp_selective_repeat import recv_protocol as upload_sr_server, send_protocol as download_sr_server
 from utils.misc import CustomHelpFormatter
 from utils.logger import logger
 

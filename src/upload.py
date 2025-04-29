@@ -6,7 +6,7 @@ import queue
 import socket
 from threading import Event, Thread
 from client.udp_stop_and_wait.upload import upload_saw_client
-from client.udp_selective_repeat.upload import upload_sr_client
+from udp_selective_repeat.udp_selective_repeat import send_protocol as upload_sr_client
 from message.message import Message, MessageType
 from message.utils import recv_message
 from utils.misc import CustomHelpFormatter
