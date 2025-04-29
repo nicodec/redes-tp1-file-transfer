@@ -34,3 +34,14 @@ python3 src/download.py -H localhost -p 8888 -d src/client/files -n img-4mb.jpg 
 ```
 python3 src/upload.py -H localhost -p 8888 -s src/client/files -n img-3mb.jpg -r udp_sr
 ```
+
+## Mininet
+Para correr mininet con la topología ya configurada:
+
+```
+sudo mn --custom src/lib/mininet.py --topo mytopo
+```
+
+La topología consta de 4 hosts y 1 switch. Los hosts son h1, h2, h3 y h4. El switch es s1.
+
+Hay perdida configuarada entre s1 y h3 de 10% y entre s1 y h4 de 40%.
