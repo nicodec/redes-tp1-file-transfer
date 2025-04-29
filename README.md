@@ -39,7 +39,7 @@ python3 src/upload.py -H localhost -p 8888 -s src/client/files -n img-3mb.jpg -r
 Para correr mininet con la topología ya configurada:
 
 ```
-sudo mn --custom src/lib/mininet.py --topo mytopo
+sudo mn --custom src/mininet.py --topo mytopo
 ```
 
 La topología consta de 4 hosts y 1 switch. Los hosts son h1, h2, h3 y h4. El switch es s1.
