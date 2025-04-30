@@ -4,7 +4,6 @@ from mininet.log import setLogLevel
 from mininet.net import Mininet
 from mininet.node import Node
 from mininet.topo import Topo
-from mininet.link import TCLink
 
 
 class Router(Node):
@@ -37,7 +36,7 @@ class FragmentationTopo(Topo):
 
 def run():
     topo = FragmentationTopo()
-    net = Mininet(topo=topo, link=TCLink, controller=None)
+    net = Mininet(topo=topo)
     net.start()
 
     r1 = cast(Node, net.get("r1"))
