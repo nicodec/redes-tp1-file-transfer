@@ -1,49 +1,63 @@
-from mininet.topo import Topo
-from mininet.net import Mininet
-from mininet.node import Host
+from typing import Any, cast
 from mininet.cli import CLI
-from mininet.link import TCLink
 from mininet.log import setLogLevel
+from mininet.net import Mininet
+from mininet.node import Node
+from mininet.topo import Topo
 
 
-class SimpleFragmentationTopo(Topo):
-    def build(self):
-        # Hosts
-        h1 = self.addHost('h1')
-        h2 = self.addHost('h2')
+class Router(Node):
+    def config(self, *args: Any, **kwargs: Any) -> dict:
+        result = super().config(*args, **kwargs)
+        self.cmd("sysctl -w net.ipv4.ip_forward=1")
+        return result
 
-        # Switches
-        s1 = self.addSwitch('s1')
-        s2 = self.addSwitch('s2')
-        s3 = self.addSwitch('s3')
+    def terminate(self):
+        self.cmd("sysctl -w net.ipv4.ip_forward=0")
+        super().terminate()
 
-        # Enlaces normales
-        self.addLink(h1, s1)
-        self.addLink(s1, s2)
-        self.addLink(s2, s3, cls=TCLink, loss=10)  # acá agregamos pérdida
-        self.addLink(s3, h2)
+
+class FragmentationTopo(Topo):
+    def build(self, **_opts):
+        r1 = self.addNode("r1", cls=Router, ip=None)
+        s1, s2 = [self.addSwitch(s) for s in ("s1", "s2")]
+
+        self.addLink(s1, r1, intfName2="r1-eth1",
+                     params2={"ip": "10.0.0.1/30"})
+        self.addLink(s2, r1, intfName2="r1-eth2",
+                     params2={"ip": "10.0.0.5/30"})
+
+        h1 = self.addHost("h1", ip="10.0.0.2/30", defaultRoute="via 10.0.0.1")
+        h2 = self.addHost("h2", ip="10.0.0.6/30", defaultRoute="via 10.0.0.5")
+
+        for h, s in [(h1, s1), (h2, s2)]:
+            self.addLink(h, s)
 
 
 def run():
-    topo = SimpleFragmentationTopo()
-    net = Mininet(topo=topo, link=TCLink)
+    topo = FragmentationTopo()
+    net = Mininet(topo=topo)
     net.start()
 
-    h1, h2 = net.get('h1'), net.get('h2')
+    r1 = cast(Node, net.get("r1"))
+    h1 = cast(Node, net.get("h1"))
+    h2 = cast(Node, net.get("h2"))
 
-    # Reducir MTU en una interfaz del switch intermedio (s2-s3)
-    h1.cmd("ip link set h1-eth0 mtu 1500")
-    h2.cmd("ip link set h2-eth0 mtu 600")  # MTU baja del lado receptor
+    # Set r1-s2 MTU to 600 bytes
+    r1.cmd("ifconfig r1-eth2 mtu 600")
 
-    # Desactivar Path MTU Discovery (para forzar fragmentación)
+    # Unset DF bit
     h1.cmd("sysctl -w net.ipv4.ip_no_pmtu_disc=1")
     h2.cmd("sysctl -w net.ipv4.ip_no_pmtu_disc=1")
 
-    print("Topología lista. Ejecutá los comandos iperf dentro del CLI.")
+    # Disable TCP MTU probing
+    h1.cmd("sysctl -w net.ipv4.tcp_mtu_probing=0")
+    h2.cmd("sysctl -w net.ipv4.tcp_mtu_probing=0")
+
     CLI(net)
     net.stop()
 
 
-if __name__ == '__main__':
-    setLogLevel('info')
+if __name__ == "__main__":
+    setLogLevel("info")
     run()
