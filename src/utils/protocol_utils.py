@@ -24,7 +24,6 @@ def send_error_message(message, socket, address, message_queue, stop_event, trig
     if not error_response:
         return None
     if error_response.get_type() == MessageType.ACK:
-        logger.info(f"El cliente recibio el mensaje de error")
         send_message(Message.ack(error_response.get_seq_number()), socket, address)
         return error_response
 

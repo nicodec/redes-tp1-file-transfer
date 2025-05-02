@@ -8,8 +8,6 @@ from utils.logger import logger
 
 def inicio_download_client(client_socket, server_address, first_message,
                            message_queue, stop_event):
-    logger.info(f'Enviando mensaje de DOWNLOAD al servidor: {first_message}')
-    
     err = False
     tamanio_del_archivo = 0
     recibi_ack_o_error = False
@@ -20,7 +18,6 @@ def inicio_download_client(client_socket, server_address, first_message,
             send_message(first_message, client_socket, server_address)
         message = get_message_from_queue(message_queue)
         if message and message.get_type() == MessageType.ACK_DOWNLOAD:
-            logger.info(f'El tamaño del archivo es {message.get_file_size()}')
             recibi_ack_o_error = True
             tamanio_del_archivo = message.get_file_size()
         elif message and message.get_type() == MessageType.ERROR and message.get_error_code() == ErrorCode.FILE_NOT_FOUND:
@@ -59,9 +56,6 @@ def download_saw_client(first_message, client_socket, server_address,
         if message and message.get_type() == MessageType.DATA and message.get_seq_number() == 1:
             datos = message.get_data()
             recibi_el_primer_paquete = True
-            logger.info('Termino el inicio del DOWNLOAD')
-            logger.info('Cliente se prepara para el DOWNLOAD')
-            logger.info(f'Recibo el paquete 1')
 
     
     ultimo_paquete_recibido = 1
@@ -94,8 +88,6 @@ def download_saw_client(first_message, client_socket, server_address,
             ultimo_paquete_recibido = ultimo_paquete_recibido + 1
             ack_message = Message.ack(ultimo_paquete_recibido)
     
-    logger.info('Se recibio el archivo con exito')
-
     # envio el ultimo ack del paquete recibido
     envie_ultimo_ack_del_paquete = False
     ack_message = Message.ack(ultimo_paquete_recibido)
@@ -106,16 +98,12 @@ def download_saw_client(first_message, client_socket, server_address,
         
         if ack_message.is_timeout():
             send_message(ack_message, client_socket, server_address)
-            logger.info(f'Envio ACK {ack_message.get_seq_number()}')
         
         # espero y recibo el fin del download
         message = get_message_from_queue(message_queue)
 
         if message and message.get_type() == MessageType.END:
-            logger.info('Recibi fin del servidor')
             envie_ultimo_ack_del_paquete = True
             
             # fin
-            logger.info('Proceso de fin del download')
             finalizar_cliente(client_socket, server_address, message_queue, stop_event)
-            logger.info('Termino fin del download')

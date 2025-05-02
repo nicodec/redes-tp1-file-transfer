@@ -6,7 +6,6 @@ from utils.logger import logger
 def finalizar_servidor(sock, client_address, msg_queue, stop_event):
     """Finaliza la conexión con el cliente enviando un ACK al recibir
     un mensaje END."""
-    logger.info("Iniciando proceso de finalización con el cliente.")
     ack_message = Message.ack(0)
     message = get_message_from_queue(msg_queue)
 

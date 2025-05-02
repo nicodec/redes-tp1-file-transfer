@@ -84,7 +84,8 @@ def start():
 
     logger.info(f"Conectando al servidor {host}:{port}")
     logger.info(f"Protocolo seleccionado: {protocol}")
-    logger.info(f"Archivo fuente: {filename}")
+    logger.info(f"Empiezo proceso de subida para el archivo: {upload_file_name}")
+
 
     # Crear socket UDP
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -96,10 +97,6 @@ def start():
     # Enviar mensaje de subida
     upload_message = Message.upload(os.path.getsize(filename), upload_file_name)
     start_time = datetime.now()
-    print(f"Enviando mensaje de subida al servidor: {upload_message}")
-    print(f"PATH : {path}")
-    print(f"FILENAME : {filename}")
-    logger.info(f"Empiezo proceso de subida para el archivo: {path}")
     stop_event = Event()
 
     # Seleccionar protocolo de envío

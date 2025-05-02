@@ -10,6 +10,7 @@ class ColorLogFormatter(logging.Formatter):
         'ERROR': "\033[31m",      # Rojo
         'CRITICAL': "\033[41m\033[97m",  # Fondo rojo, texto blanco
         'RESET': "\033[0m"
+        
     }
 
     def format(self, record):

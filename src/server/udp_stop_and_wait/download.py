@@ -40,7 +40,6 @@ def download_saw_server(first_message, sock,
     if error_detectado:
         return
 
-    logger.info(f"Tamaño del archivo: {first_message.get_file_size()} bytes.")
     ack_recibido = False
 
     # Esperar el ACK inicial del cliente
@@ -53,7 +52,6 @@ def download_saw_server(first_message, sock,
         response = get_message_from_queue(msg_queue)
         if response and response.get_type() == MessageType.ACK:
             ack_recibido = True
-            logger.info("ACK inicial recibido. Preparando envío del archivo.")
 
     # Enviar el archivo en paquetes
     next_update = start_time + timedelta(seconds=1)
@@ -77,8 +75,6 @@ def download_saw_server(first_message, sock,
                 ack_recibido = True
                 paquete = Message.data(paquete_actual, data)
 
-    logger.info("Archivo enviado con éxito.")
-
     # Finalizar la transferencia
     fin_enviado = False
     end_message = Message.end()
@@ -86,11 +82,9 @@ def download_saw_server(first_message, sock,
         if stop_event.is_set():
             return
         if end_message.is_timeout():
-            logger.debug("Reenviando mensaje de fin al cliente.")
             send_message(end_message, sock, client_address)
         response = get_message_from_queue(msg_queue)
         if response and response.get_type() == MessageType.END:
-            logger.info("Fin del cliente recibido.")
             fin_enviado = True
             finalizar_servidor(sock, client_address, msg_queue, stop_event)
             logger.info("Proceso de descarga finalizado.")

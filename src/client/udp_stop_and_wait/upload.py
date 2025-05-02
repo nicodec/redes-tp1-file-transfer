@@ -7,7 +7,6 @@ from utils.logger import logger
 
 def inicio_upload_client(client_socket, server_address, mensaje_inicial, msg_queue, stop_event):
     """Inicia el protocolo de subida enviando el mensaje inicial y manejando errores."""
-    logger.info("Enviando mensaje de inicio de upload al servidor.")
     ack_o_error_recibido = False
 
     while not ack_o_error_recibido:
@@ -32,11 +31,9 @@ def inicio_upload_client(client_socket, server_address, mensaje_inicial, msg_que
 
             # Caso de ACK recibido
             if respuesta.get_type() == MessageType.ACK and respuesta.get_seq_number() == 0:
-                logger.info("ACK inicial recibido del servidor.")
                 send_ack(respuesta.get_seq_number(), client_socket, server_address)
                 ack_o_error_recibido = True
 
-    logger.info("Inicio del protocolo de upload completado.")
     return False
 
 
@@ -48,7 +45,6 @@ def upload_saw_client(mensaje_inicial, client_socket, server_address, msg_queue,
     if error_detectado:
         return
 
-    logger.info("Preparando el cliente para subir el archivo.")
     siguiente_actualizacion = inicio + timedelta(seconds=1)
     secuencia = 1
     bytes_enviados = 0
@@ -75,7 +71,4 @@ def upload_saw_client(mensaje_inicial, client_socket, server_address, msg_queue,
                 secuencia += 1
                 ack_recibido = True
 
-    logger.info("Archivo enviado exitosamente.")
-    logger.info("Iniciando proceso de finalización del upload.")
     finalizar_cliente(client_socket, server_address, msg_queue, stop_event)
-    logger.info("Proceso de upload finalizado.")

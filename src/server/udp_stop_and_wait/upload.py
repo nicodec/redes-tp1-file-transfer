@@ -43,12 +43,10 @@ def inicio_upload_server(sock, client_address, mensaje_inicial, msg_queue, stop_
         respuesta = get_message_from_queue(msg_queue)
         if respuesta and respuesta.get_type() == MessageType.ACK:
             ack_recibido = True
-            logger.info("ACK inicial recibido del cliente.")
         elif respuesta and respuesta.get_type() == MessageType.DATA and respuesta.get_seq_number() == 1:
             ack_recibido = True
             logger.info("Primer paquete recibido, lo que indica que el cliente recibió el ACK inicial.")
 
-    logger.info("Inicio del protocolo de subida completado.")
     return False
 
 
@@ -62,8 +60,6 @@ def upload_saw_server(mensaje_inicial, sock, client_address, msg_queue, file, fi
             file.close()
             os.remove(filename)
         return
-
-    logger.info("Preparando el servidor para recibir el archivo.")
 
     bytes_recibidos = 0
     secuencia_actual = 1
@@ -118,10 +114,7 @@ def upload_saw_server(mensaje_inicial, sock, client_address, msg_queue, file, fi
     if buffer_datos:
         file.write(b"".join(buffer_datos))
 
-    logger.info("Archivo recibido exitosamente.")
-    logger.info("Iniciando proceso de finalización de la subida.")
     finalizar_servidor(sock, client_address, msg_queue, stop_event)
-    logger.info("Proceso de subida finalizado.")
 
     if file:
         file.close()

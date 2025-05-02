@@ -81,6 +81,8 @@ def upload(sock, client_address,
                                      stop_event))
         worker_thread.start()
         join_worker(worker_thread, client_address, stop_event, file)
+    
+    logger.info(f"El cliente {client_address} ha terminado la subida ")
 
 
 def download(sock, client_address, messages_queue,
@@ -223,7 +225,6 @@ def start_server():
     server_data.sock.bind(server_address)
 
     logger.info(f"Servidor iniciado en: {server_address}")
-    logger.info(f"Almacenamiento: {server_data.storage_path}")
     logger.info(f"Protocolo: {args.protocol}")
 
     # Diccionario para mantener los clientes conectados

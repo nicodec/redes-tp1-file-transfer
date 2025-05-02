@@ -49,7 +49,7 @@ def show_info(total_size, current_size, start_time, next_update):
         percentage = (current_size / total_size) * 100 if total_size > 0 else 0
         
         logger.info(f"Progress: {percentage:.2f}% - Speed: {speed:.2f} bytes/sec")
-        return now + timedelta(seconds=1)
+        return now + timedelta(seconds=5)
     return next_update
 
 
