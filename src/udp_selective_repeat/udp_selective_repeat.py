@@ -18,7 +18,7 @@ def init_window(message):
     package_amount = (file_size // DATA_MAX_SIZE) + 1
     window_base = 0
     logger.debug("package_amount: " + str(package_amount))
-    window_top = 1 if package_amount < 2 else package_amount // 2
+    window_top = 1 if package_amount < 2 else package_amount // 4
     return package_amount, window_base, window_top
 
 
@@ -77,6 +77,7 @@ def recv_data_message(message, socket, address, received_messages, received_data
             else:
                 break
     #send ack
+    #logger.info(f"Enviando ack {seqNumber}")
     send_ack(seqNumber, socket, address)
     return window_base, window_top, received_packages
 
@@ -127,7 +128,8 @@ def send_protocol(initial_message, socket, address, message_queue, file, stop_ev
                 logger.debug(f"i : {i} and {acknowledgements[i]}")
                 sended_messages[i] = Message.data(i, read_file(file, DATA_MAX_SIZE, i))
                 send_message(sended_messages[i], socket, address)
-            if (sended_messages[i] and sended_messages[i].is_timeout()):
+            if (sended_messages[i] and sended_messages[i].is_timeout() and not acknowledgements[i]):
+                #logger.warning(f"REENVIANDO EL PAQUETE {i}")
                 send_message(sended_messages[i], socket, address)
     
         message = message_queue.get(False) if not message_queue.empty() else None

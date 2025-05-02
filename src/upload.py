@@ -109,7 +109,7 @@ def start():
     send_worker.start()
 
     # Manejo de timeout
-    timeout = datetime.now() + timedelta(seconds=15)
+    timeout = datetime.now() + timedelta(seconds=30)
     timeout_exit = True
     while datetime.now() < timeout:
         try:
