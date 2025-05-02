@@ -224,7 +224,7 @@ def start_server():
     server_address = (args.host, args.port)
     server_data.sock.bind(server_address)
 
-    logger.info(f"Servidor iniciado en: {server_address}")
+    logger.info(f"\033[32mServidor iniciado en {args.host}:{args.port}\033[0m")
     logger.info(f"Protocolo: {args.protocol}")
 
     # Diccionario para mantener los clientes conectados
