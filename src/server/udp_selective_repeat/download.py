@@ -49,7 +49,7 @@ def download_sr_server(initial_message, socket, address, message_queue, file, st
                 logger.debug(f"i : {i} and {acknowledgements[i]}")
                 sended_messages[i] = Message.data(i, read_file(file, DATA_MAX_SIZE, i))
                 send_message(sended_messages[i], socket, address)
-            if (sended_messages[i] and sended_messages[i].is_timeout()):
+            if (sended_messages[i] and sended_messages[i].is_timeout() and not acknowledgements[i]):
                 send_message(sended_messages[i], socket, address)
     
         message = message_queue.get(False) if not message_queue.empty() else None

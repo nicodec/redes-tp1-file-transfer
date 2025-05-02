@@ -15,7 +15,7 @@ def init_window(message):
     package_amount = (file_size // DATA_MAX_SIZE) + 1
     window_base = 0
     logger.debug("package_amount: " + str(package_amount))
-    window_top = 1 if package_amount < 2 else package_amount // 2
+    window_top = 1 if package_amount < 2 else package_amount // 4
     return package_amount, window_base, window_top
 
 
