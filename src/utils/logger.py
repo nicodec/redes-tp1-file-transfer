@@ -18,8 +18,7 @@ class ColorLogFormatter(logging.Formatter):
         reset = self.COLORS['RESET']
         log_format = (
             f"{level_color}[%(levelname)s]{reset} "
-            f"%(asctime)s | %(name)s | %(message)s "
-            f"(%(filename)s:%(lineno)d)"
+            f"%(asctime)s | %(message)s "
         )
         formatter = logging.Formatter(log_format, datefmt='%H:%M:%S')
         return formatter.format(record)

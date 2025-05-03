@@ -172,7 +172,9 @@ def process_client_message(server_data: ServerData, message: Message,
 
     elif msg_type == MessageType.DOWNLOAD:
         msg_file_name = message.get_file_name()
-        logger.info(f"Cliente {client_address} se ha conectado.")
+        logger.info("\033[32m+-----------------------------------------------+")
+        logger.info(f"\033[32m| Cliente {client_address} se ha conectado. |")
+        logger.info("\033[32m+-----------------------------------------------+")
         logger.info(f"Archivo a descargar: {msg_file_name}")
         messages_queue = queue.Queue()
         filename = os.path.join(server_data.storage_path, msg_file_name)
@@ -224,7 +226,9 @@ def start_server():
     server_address = (args.host, args.port)
     server_data.sock.bind(server_address)
 
-    logger.info(f"\033[32mServidor iniciado en {args.host}:{args.port}\033[0m")
+    logger.info("\033[32m+-------------------------------------+")
+    logger.info(f"\033[32m| Servidor iniciado en {args.host}:{args.port} |")
+    logger.info("\033[32m+-------------------------------------+")
     logger.info(f"Protocolo: {args.protocol}")
 
     # Diccionario para mantener los clientes conectados

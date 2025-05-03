@@ -82,7 +82,9 @@ def start():
     filename = os.path.join(path, upload_file_name)
     file = open(filename, "rb")
 
-    logger.info(f"Conectando al servidor {host}:{port}")
+    logger.info("\033[32m+---------------------------------------+")
+    logger.info(f"\033[32m| Conectando al servidor {host}:{port} |")
+    logger.info("\033[32m+---------------------------------------+")
     logger.info(f"Protocolo seleccionado: {protocol}")
     logger.info(f"Empiezo proceso de subida para el archivo: {upload_file_name}")
 
@@ -133,7 +135,7 @@ def start():
         stop_event.set()
         logger.error("No se ha recibido respuesta del servidor.")
     else:
-        logger.info(f"Tiempo de transferencia: {datetime.now() - start_time}")
+        logger.info(f"\033[34mTiempo de transferencia: {datetime.now() - start_time}\033[0m")
     if file:
         file.close()
     sock.close()
