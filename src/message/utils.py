@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import logging
 from random import randint
+import threading
 from message.message import TOTAL_BYTES_LENGTH, Message
 from utils.logger import logger
 
@@ -48,7 +49,7 @@ def show_info(total_size, current_size, start_time, next_update):
         speed = current_size / elapsed_time if elapsed_time > 0 else 0
         percentage = (current_size / total_size) * 100 if total_size > 0 else 0
         
-        logger.info(f"Progress: {percentage:.2f}% - Speed: {speed:.2f} bytes/sec")
+        logger.info(f"Progress: {percentage:.2f}% - Speed: {speed:.2f} bytes/sec RequestId:{threading.get_native_id()}")
         return now + timedelta(seconds=5)
     return next_update
 
