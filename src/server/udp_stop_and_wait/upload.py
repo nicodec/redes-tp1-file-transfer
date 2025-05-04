@@ -121,9 +121,6 @@ def upload_saw_server(mensaje_inicial, sock, client_address, msg_queue, file, fi
     with open(filename, 'rb') as file_read_for_digest:
         file_read_for_digest = file_read_for_digest.read()
     final_md5_digest = hashlib.md5(file_read_for_digest).hexdigest()
-    
-    logger.error(f"{final_md5_digest}")
-    logger.error(f"{msg_md5_digest}")
 
     finalizar_servidor(sock, client_address, msg_queue, stop_event, final_md5_digest == msg_md5_digest)
     if file:
