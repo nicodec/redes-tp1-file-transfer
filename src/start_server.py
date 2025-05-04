@@ -1,3 +1,4 @@
+import hashlib
 import socket
 import os
 import logging
@@ -103,9 +104,14 @@ def download(sock, client_address, messages_queue,
     elif protocol == 'udp_sr':
         recv_protocol = download_sr_server
 
+    file_read_for_digest: bytes
+    with open(filename, 'rb') as file_read_for_digest:
+        file_read_for_digest = file_read_for_digest.read()
+    md5_digest = hashlib.md5(file_read_for_digest).hexdigest()
+
     send_worker = Thread(target=recv_protocol,
                          args=(first_message, sock, client_address,
-                               messages_queue, file, stop_event))
+                               messages_queue, file, md5_digest, stop_event))
     send_worker.start()
     join_worker(send_worker, client_address, stop_event, file)
 

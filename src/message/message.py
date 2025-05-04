@@ -189,6 +189,12 @@ class Message:
     def ack(seq_number):
         """Crea un mensaje de confirmación"""
         return Message(MessageType.ACK, seq_number)
+    
+    @staticmethod
+    def ack_end_download_saw(seq_number, md5_digest):
+        """Crea un mensaje de confirmación de finalizacion de descarga, y contiene el digest para el cliente"""
+        data = md5_digest.encode('utf-8')
+        return Message(MessageType.ACK, seq_number, data)
 
     @staticmethod
     def ack_download(file_size):
@@ -211,3 +217,9 @@ class Message:
     def end():
         """Crea un mensaje de finalización"""
         return Message(MessageType.END, 0)
+
+    @staticmethod
+    def end_download(md5_digest):
+        """Crea un mensaje de finalización de download con el digest correspondiente"""
+        data = md5_digest.encode('utf-8')
+        return Message(MessageType.END, 0, data)

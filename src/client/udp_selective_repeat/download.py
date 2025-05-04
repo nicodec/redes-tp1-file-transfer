@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import hashlib
 import os
 
 from message.message import TOTAL_BYTES_LENGTH, Message, MessageType
@@ -52,6 +53,18 @@ def download_sr_client(initial_message, socket, address, message_queue, file, fi
             if message.get_type() == MessageType.DATA:
                 window_base, window_top, received_packages = recv_data_message(message, socket, address, received_messages, received_data, package_to_receive_size, window_base, window_top, received_packages, file)
             elif message.get_type() == MessageType.END:
+                md5_digest = message.get_data_as_string()
+                
+                file.flush() # Sin esto no funciona el digest                
+                file_read_for_digest: bytes
+                with open(filename, 'rb') as file_read_for_digest:
+                    file_read_for_digest = file_read_for_digest.read()
+                final_md5_digest = hashlib.md5(file_read_for_digest).hexdigest()
+                
+                if(final_md5_digest != md5_digest):
+                    logger.error("Error en la integridad del archivo. Por favor, descarguelo nuevamente.")
+                    os.unlink(filename)
+
                 end_recv_protocol(message_queue, message, socket, address, stop_event)
                 return
             elif message.get_type() == MessageType.ERROR:

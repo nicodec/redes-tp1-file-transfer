@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from server.udp_stop_and_wait.finalizar_servidor import finalizar_servidor
+from server.udp_stop_and_wait.finalizar_servidor import finalizar_servidor, finalizar_servidor_download_saw
 from message.message import DATA_MAX_SIZE, Message, MessageType
 from message.utils import (
     send_message, get_message_from_queue, show_info
@@ -32,7 +32,7 @@ def inicio_download_server(sock, client_address, first_message, msg_queue, stop_
 
 def download_saw_server(first_message, sock,
                         client_address, msg_queue,
-                        file, stop_event):
+                        file, md5_digest, stop_event):
     """Implementa el protocolo Stop-and-Wait para la descarga de archivos."""
     start_time = datetime.now()
     error_detectado = inicio_download_server(sock, client_address, first_message, msg_queue, stop_event)
@@ -86,5 +86,5 @@ def download_saw_server(first_message, sock,
         response = get_message_from_queue(msg_queue)
         if response and response.get_type() == MessageType.END:
             fin_enviado = True
-            finalizar_servidor(sock, client_address, msg_queue, stop_event)
+            finalizar_servidor_download_saw(sock, client_address, msg_queue, stop_event, md5_digest)
             logger.info("Proceso de descarga finalizado.")

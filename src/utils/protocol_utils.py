@@ -71,6 +71,21 @@ def end_send_protocol(message_queue, socket, address, stop_event):
             logger.debug("Se ha cerrado la conexion correctamente")
             return
 
+def end_send_protocol_download_sr(message_queue, socket, address, stop_event, md5_digest):
+    end_message = Message.end_download(md5_digest)
+    send_message(end_message, socket, address)
+    while True:
+        if stop_event.is_set():
+            return
+        if end_message.is_timeout(): # Volver a enviar end_message.
+            send_message(end_message, socket, address)
+        message = message_queue.get(False) if not message_queue.empty() else None
+        if message and message.get_type() == MessageType.ACK_END:
+            send_ack(message.get_seq_number(), socket, address)
+            if (message.get_seq_number() == 1):
+                logger.error("El archivo no se ha procesado integramente. Por favor intente nuevamente")
+            logger.debug("Se ha cerrado la conexion correctamente")
+            return
 
 def end_recv_protocol(message_queue, end_message, socket, address, stop_event):
     ack_end_message = Message.ack_end(end_message.get_seq_number())

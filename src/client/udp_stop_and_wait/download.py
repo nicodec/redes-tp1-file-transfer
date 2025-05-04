@@ -1,5 +1,7 @@
+import hashlib
+import os
 from socket import *
-from client.udp_stop_and_wait.finalizar_cliente import finalizar_cliente
+from client.udp_stop_and_wait.finalizar_cliente import finalizar_cliente, finalizar_cliente_download_saw
 from message.message import Message, MessageType, ErrorCode
 from datetime import datetime, timedelta
 from message.utils import send_message, get_message_from_queue, show_info
@@ -104,6 +106,12 @@ def download_saw_client(first_message, client_socket, server_address,
 
         if message and message.get_type() == MessageType.END:
             envie_ultimo_ack_del_paquete = True
+
+            file.flush() # Sin esto no funciona el digest                
+            file_read_for_digest: bytes
+            with open(filename, 'rb') as file_read_for_digest:
+                file_read_for_digest = file_read_for_digest.read()
+            final_md5_digest = hashlib.md5(file_read_for_digest).hexdigest()
             
             # fin
-            finalizar_cliente(client_socket, server_address, message_queue, stop_event)
+            finalizar_cliente_download_saw(client_socket, server_address, message_queue, stop_event, final_md5_digest, filename)

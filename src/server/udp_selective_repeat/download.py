@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from message.message import TOTAL_BYTES_LENGTH, DATA_MAX_SIZE, Message, MessageType
 from message.utils import send_message, show_info
 from utils.protocol_utils import (
+    end_send_protocol_download_sr,
     read_file,
     init_window,
     has_errors,
@@ -14,7 +15,7 @@ from utils.protocol_utils import (
 from utils.logger import logger
 
 
-def download_sr_server(initial_message, socket, address, message_queue, file, stop_event):
+def download_sr_server(initial_message, socket, address, message_queue, file, md5_digest, stop_event):
     start_time = datetime.now()
     logger.debug(f"El mensaje al entrar es : {initial_message}")
     
@@ -73,4 +74,4 @@ def download_sr_server(initial_message, socket, address, message_queue, file, st
                 logger.error(f"Error enviando datos -- {message.getErrorCode}" )
                 return
     logger.info(f"El archivo se ha enviado correctamente.")
-    end_send_protocol(message_queue, socket, address, stop_event)
+    end_send_protocol_download_sr(message_queue, socket, address, stop_event, md5_digest)
