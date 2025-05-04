@@ -1,11 +1,13 @@
 from datetime import datetime, timedelta
+import hashlib
 import os
 from server.udp_stop_and_wait.finalizar_servidor import finalizar_servidor
-from message.message import Message, MessageType
+from message.message import ErrorCode, Message, MessageType
 from message.utils import (
     send_ack, send_message, get_message_from_queue, show_info
 )
 from utils.logger import logger
+from utils.protocol_utils import send_error_message
 
 
 def inicio_upload_server(sock, client_address, mensaje_inicial, msg_queue, stop_event):
@@ -50,7 +52,7 @@ def inicio_upload_server(sock, client_address, mensaje_inicial, msg_queue, stop_
     return False
 
 
-def upload_saw_server(mensaje_inicial, sock, client_address, msg_queue, file, filename, stop_event):
+def upload_saw_server(mensaje_inicial, sock, client_address, msg_queue, file, filename, msg_md5_digest, stop_event):
     """Protocolo Stop-and-Wait para la subida de archivos al servidor."""
     inicio = datetime.now()
     error_detectado = inicio_upload_server(sock, client_address, mensaje_inicial, msg_queue, stop_event)
@@ -111,10 +113,24 @@ def upload_saw_server(mensaje_inicial, sock, client_address, msg_queue, file, fi
                     paquete_recibido = True
 
     # Escribir cualquier dato restante en el buffer
+    # Sin esto rompe el md5
     if buffer_datos:
         file.write(b"".join(buffer_datos))
+                
+    file_read_for_digest: bytes
+    with open(filename, 'rb') as file_read_for_digest:
+        file_read_for_digest = file_read_for_digest.read()
+    final_md5_digest = hashlib.md5(file_read_for_digest).hexdigest()
+    
+    logger.error(f"{final_md5_digest}")
+    logger.error(f"{msg_md5_digest}")
 
-    finalizar_servidor(sock, client_address, msg_queue, stop_event)
-
+    finalizar_servidor(sock, client_address, msg_queue, stop_event, final_md5_digest == msg_md5_digest)
     if file:
         file.close()
+    if (final_md5_digest != msg_md5_digest):
+        logger.error("Error en la integridad del archivo. Borrando archivo.")
+        os.remove(filename)
+    
+        
+        

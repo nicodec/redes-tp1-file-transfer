@@ -66,12 +66,28 @@ def end_send_protocol(message_queue, socket, address, stop_event):
         message = message_queue.get(False) if not message_queue.empty() else None
         if message and message.get_type() == MessageType.ACK_END:
             send_ack(message.get_seq_number(), socket, address)
+            if (message.get_seq_number() == 1):
+                logger.error("El archivo no se ha subido integramente. Por favor intente nuevamente")
             logger.debug("Se ha cerrado la conexion correctamente")
             return
 
 
 def end_recv_protocol(message_queue, end_message, socket, address, stop_event):
     ack_end_message = Message.ack_end(end_message.get_seq_number())
+    send_message(ack_end_message, socket, address)
+    while True:
+        if stop_event.is_set():
+            logger.warning("No se ha podido confirmar el mensaje de fin de conexion.")
+            return
+        message = message_queue.get(False) if not message_queue.empty() else None
+        if message and message.get_type() == MessageType.ACK:
+            logger.debug("Se ha cerrado la conexion correctamente")
+            return
+        elif message and message.get_type() == MessageType.END: # Volver a enviar ack_end_message.
+            send_message(ack_end_message, socket, address)
+
+def end_recv_protocol_on_error(message_queue, end_message, socket, address, stop_event):
+    ack_end_message = Message.ack_end(1)
     send_message(ack_end_message, socket, address)
     while True:
         if stop_event.is_set():

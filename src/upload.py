@@ -1,5 +1,6 @@
 import argparse
 from datetime import datetime, timedelta
+import hashlib
 import logging
 import os
 import queue
@@ -81,12 +82,18 @@ def start():
     
     filename = os.path.join(path, upload_file_name)
     file = open(filename, "rb")
+    
+    file_read_for_digest: bytes
+    with open(filename, 'rb') as file_read_for_digest:
+        file_read_for_digest = file_read_for_digest.read()
+    md5_digest = hashlib.md5(file_read_for_digest).hexdigest()
 
     logger.info("\033[32m+---------------------------------------+")
     logger.info(f"\033[32m| Conectando al servidor {host}:{port} |")
     logger.info("\033[32m+---------------------------------------+")
     logger.info(f"Protocolo seleccionado: {protocol}")
     logger.info(f"Empiezo proceso de subida para el archivo: {upload_file_name}")
+    logger.info(f"Digest del archivo: {md5_digest}")
 
 
     # Crear socket UDP
@@ -97,7 +104,7 @@ def start():
     message_queue = queue.Queue()
 
     # Enviar mensaje de subida
-    upload_message = Message.upload(os.path.getsize(filename), upload_file_name)
+    upload_message = Message.upload(os.path.getsize(filename), upload_file_name, md5_digest)
     start_time = datetime.now()
     stop_event = Event()
 

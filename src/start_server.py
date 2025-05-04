@@ -49,7 +49,7 @@ def join_worker(worker, client_address, stop_event, file, timeout=1800):
 
 def upload(sock, client_address,
            message, messages_queue,
-           filename, stop_event, protocol):
+           filename, msg_md5_digest, stop_event, protocol):
     file = None
     initial_message = message
 
@@ -77,7 +77,7 @@ def upload(sock, client_address,
     if protocol_handler:
         worker_thread = Thread(target=protocol_handler,
                                args=(initial_message, sock, client_address,
-                                     messages_queue, file, filename,
+                                     messages_queue, file, filename, msg_md5_digest,
                                      stop_event))
         worker_thread.start()
         join_worker(worker_thread, client_address, stop_event, file)
@@ -157,6 +157,7 @@ def process_client_message(server_data: ServerData, message: Message,
     # Procesar el mensaje según su tipo
     if msg_type == MessageType.UPLOAD:
         msg_file_name = message.get_file_name()
+        msg_md5_digest = message.get_file_digest()
         logger.info(f"Cliente {client_address} se ha conectado.")
         logger.info(f"Solicitud de subida de archivo: {msg_file_name}")
         messages_queue = queue.Queue()
@@ -164,7 +165,7 @@ def process_client_message(server_data: ServerData, message: Message,
         stop_event = Event()
         upload_worker = Thread(
             target=upload, args=(server_data.sock, client_address, message,
-                                 messages_queue, filename, stop_event,
+                                 messages_queue, filename, msg_md5_digest, stop_event,
                                  server_data.protocol))
         server_data.clients[client_address] = Client(
             client_address, upload_worker, messages_queue, stop_event)

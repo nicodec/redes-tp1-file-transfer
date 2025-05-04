@@ -12,5 +12,7 @@ def finalizar_cliente(sock, server_addr, msg_queue, stop_event):
             send_message(end_msg, sock, server_addr)
         response = get_message_from_queue(msg_queue)
         if response and response.get_type() == MessageType.ACK:
+            if(response.get_seq_number() == 1):
+                logger.error("El archivo no se ha subido integramente. Por favor intente nuevamente")
             send_ack(response.get_seq_number(), sock, server_addr)
             break

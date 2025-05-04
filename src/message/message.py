@@ -60,8 +60,9 @@ class Message:
         if self.type == MessageType.ERROR:
             basic += f", error_code={self.get_error_code().name}"
         elif self.type == MessageType.UPLOAD:
-            file_size, file_name = self.get_data_as_string().split("|")
-            basic += f", file_size={file_size}, file_name={file_name}"
+            file_size, file_name, hash = self.get_data_as_string().split("|")
+            basic += f", file_size={file_size}, file_name={file_name}, file_hash={hash}"
+            logger.debug(f"hash del archivo: {hash}.")
         elif self.type == MessageType.DOWNLOAD:
             basic += f", file_name={self.get_file_name()}"
         elif self.data:
@@ -133,6 +134,14 @@ class Message:
             if len(parts) >= 2:
                 return parts[1]
         return None
+    
+    def get_file_digest(self):
+        """Extrae el digest del archivo del mensaje"""        
+        if self.type == MessageType.UPLOAD:
+            parts = self.get_data_as_string().split("|")
+            if len(parts) >= 2:
+                return parts[2]
+        return None
 
     def get_file_size(self):
         """Extrae el tamaño del archivo del mensaje"""
@@ -160,9 +169,9 @@ class Message:
     # Métodos de fábrica estáticos para crear mensajes específicos
 
     @staticmethod
-    def upload(file_size, file_name):
+    def upload(file_size, file_name, md5_digest):
         """Crea un mensaje de subida de archivo"""
-        data = f"{file_size}|{file_name}".encode('utf-8')
+        data = f"{file_size}|{file_name}|{md5_digest}".encode('utf-8')
         return Message(MessageType.UPLOAD, 0, data)
 
     @staticmethod
