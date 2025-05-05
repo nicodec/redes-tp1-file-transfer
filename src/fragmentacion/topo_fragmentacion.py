@@ -1,60 +1,63 @@
-#!/usr/bin/env python
-
-from mininet.topo import Topo
-from mininet.net import Mininet
-from mininet.node import OVSSwitch
-from mininet.link import TCLink
+from typing import Any, cast
 from mininet.cli import CLI
 from mininet.log import setLogLevel
+from mininet.net import Mininet
+from mininet.node import Node
+from mininet.topo import Topo
+from mininet.link import TCLink
+
+class Router(Node):
+    def config(self, *args: Any, **kwargs: Any) -> dict:
+        result = super().config(*args, **kwargs)
+        self.cmd("sysctl -w net.ipv4.ip_forward=1")
+        return result
+
+    def terminate(self):
+        self.cmd("sysctl -w net.ipv4.ip_forward=0")
+        super().terminate()
+
 
 class FragmentationTopo(Topo):
-    """Topología para demostrar la fragmentación IPv4 con 3 switches"""
     def build(self, **_opts):
-        # Crear los 3 switches en línea
-        s1 = self.addSwitch('s1')
-        s2 = self.addSwitch('s2')  # Switch central
-        s3 = self.addSwitch('s3')
-        
-        # Crear los dos hosts
-        h1 = self.addHost('h1', ip='10.0.0.1/24')
-        h2 = self.addHost('h2', ip='10.0.0.2/24')
-        
-        # Conectar hosts a switches
+        r1 = self.addNode("r1", cls=Router, ip=None)
+        s1, s2 = [self.addSwitch(s) for s in ("s1", "s2")]
+
+        self.addLink(s1, r1, intfName2="r1-eth1",
+                     params2={"ip": "10.0.0.1/30"})
+        self.addLink(s2, r1, intfName2="r1-eth2",
+                     params2={"ip": "10.0.0.5/30"})
+
+        h1 = self.addHost("h1", ip="10.0.0.2/30", defaultRoute="via 10.0.0.1")
+        h2 = self.addHost("h2", ip="10.0.0.6/30", defaultRoute="via 10.0.0.5")
+
         self.addLink(h1, s1)
-        
-        # Agregar pérdida de paquetes (10%) en la conexión entre h2 y s3
-        self.addLink(h2, s3, cls=TCLink, loss=10)
-        
-        # Conectar los switches en línea
-        # La interfaz s2-eth1 conecta con s1
-        self.addLink(s1, s2)
-        
-        # La interfaz s2-eth2 conecta con s3
-        self.addLink(s2, s3)
+        self.addLink(h2, s2, loss = 10, cls = TCLink, intfName2 = "perdida-h2")
 
 def run():
-    """Crear y configurar la red"""
     topo = FragmentationTopo()
-    
-    # Configurar para que funcione sin controlador
-    net = Mininet(topo=topo, link=TCLink, switch=OVSSwitch, controller=None)
+    net = Mininet(topo=topo)
     net.start()
-    
-    # Configurar switches para funcionar en modo standalone (sin controlador)
-    for switch in net.switches:
-        switch.cmd('ovs-vsctl set bridge {} protocols=OpenFlow10,OpenFlow12,OpenFlow13'.format(switch.name))
-        switch.cmd('ovs-vsctl set bridge {} fail-mode=standalone'.format(switch.name))
-    
-    # Reducir el MTU de la interfaz del switch central (s2) que conecta con s3
-    # s2-eth2 es la interfaz que conecta s2 con s3
-    s2 = net.get('s2')
-    s2.cmd('ifconfig s2-eth2 mtu 600')
-    
+
+    r1 = cast(Node, net.get("r1"))
+    h1 = cast(Node, net.get("h1"))
+    h2 = cast(Node, net.get("h2"))
+
+    # Set r1-s2 MTU to 600 bytes
+    r1.cmd("ifconfig r1-eth2 mtu 600")
+
+    # Unset DF bit
+    h1.cmd("sysctl -w net.ipv4.ip_no_pmtu_disc=1")
+    h2.cmd("sysctl -w net.ipv4.ip_no_pmtu_disc=1")
+
+    # Disable TCP MTU probing
+    h1.cmd("sysctl -w net.ipv4.tcp_mtu_probing=0")
+    h2.cmd("sysctl -w net.ipv4.tcp_mtu_probing=0")
+
     print("\n*** Topología de red para el ejercicio de fragmentación IPv4 ***")
     print("Configuración:")
-    print("- Topología: h1 -- s1 -- s2 -- s3 -- h2")
-    print("- MTU de s2-eth2 (interfaz del switch central hacia s3): 600 bytes")
-    print("- Pérdida de paquetes en la conexión h2-s3: 10%")
+    print("- Topología: h1 -- s1 -- r1 -- s2 -- h2")
+    print("- MTU de s2-eth1 (interfaz del router central hacia s2): 600 bytes")
+    print("- Pérdida de paquetes en la conexión h2-s2: 10%")
     print("\nComandos sugeridos para probar la fragmentación:")
     print("1. Iniciar servidor iperf en h2:")
     print("   mininet> h2 iperf -s &")
@@ -67,9 +70,10 @@ def run():
     print("   mininet> h2 wireshark &")
     print("   mininet> xterm s2")
     print("   En la terminal xterm: # wireshark")
-    
+
     CLI(net)
     net.stop()
+
 
 if __name__ == "__main__":
     setLogLevel("info")
