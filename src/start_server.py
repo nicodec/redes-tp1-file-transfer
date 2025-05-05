@@ -98,10 +98,13 @@ def download(sock, client_address, messages_queue,
     if not os.path.exists(filename):
         logger.error(f"El archivo {filename} no se ha encontrado.")
         first_message = Message.error(ErrorCode.FILE_NOT_FOUND)
+        messages_queue.put(first_message)
+        return
     else:
         file = open(filename, "rb")
         file_size = os.path.getsize(filename)
         first_message = Message.ack_download(file_size)
+
     recv_protocol = None
     if protocol == 'udp_saw':
         recv_protocol = download_saw_server
@@ -118,7 +121,6 @@ def download(sock, client_address, messages_queue,
                                messages_queue, file, md5_digest, stop_event))
     send_worker.start()
     join_worker(send_worker, client_address, stop_event, file)
-
 
 def parse_arguments():
     """Parsea los argumentos de línea de comandos"""
