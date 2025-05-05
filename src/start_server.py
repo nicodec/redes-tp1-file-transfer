@@ -18,6 +18,10 @@ from utils.logger import logger
 DEFAULT_PROTOCOL = 'udp_saw'
 MAX_FILE_SIZE = 1024 * 1024 * 100  # 100 MB
 
+# Enable console colors on Windows
+if os.name == 'nt':
+    os.system('color')
+
 
 class ServerData:
     """Estructura que contiene el estado del server"""
@@ -78,11 +82,11 @@ def upload(sock, client_address,
     if protocol_handler:
         worker_thread = Thread(target=protocol_handler,
                                args=(initial_message, sock, client_address,
-                                     messages_queue, file, filename, msg_md5_digest,
-                                     stop_event))
+                                     messages_queue, file, filename,
+                                     msg_md5_digest, stop_event))
         worker_thread.start()
         join_worker(worker_thread, client_address, stop_event, file)
-    
+
     logger.info(f"El cliente {client_address} ha terminado la subida ")
 
 
@@ -118,7 +122,7 @@ def download(sock, client_address, messages_queue,
 
 def parse_arguments():
     """Parsea los argumentos de línea de comandos"""
-    parser = argparse.ArgumentParser(description="START SERVER Description",
+    parser = argparse.ArgumentParser(description="START SERVER",
                                      formatter_class=CustomHelpFormatter)
     verbosity_group = parser.add_mutually_exclusive_group()
     verbosity_group.add_argument("-v", "--verbose", action="store_true",
@@ -171,17 +175,17 @@ def process_client_message(server_data: ServerData, message: Message,
         stop_event = Event()
         upload_worker = Thread(
             target=upload, args=(server_data.sock, client_address, message,
-                                 messages_queue, filename, msg_md5_digest, stop_event,
-                                 server_data.protocol))
+                                 messages_queue, filename, msg_md5_digest,
+                                 stop_event, server_data.protocol))
         server_data.clients[client_address] = Client(
             client_address, upload_worker, messages_queue, stop_event)
         server_data.clients[client_address].run()
 
     elif msg_type == MessageType.DOWNLOAD:
         msg_file_name = message.get_file_name()
-        logger.info("\033[32m+-----------------------------------------------+")
-        logger.info(f"\033[32m| Cliente {client_address} se ha conectado. |")
-        logger.info("\033[32m+-----------------------------------------------+")
+        logger.info("\033[32m+----------------------------------------------+")
+        logger.info(f"\033[32m| Cliente {client_address} se ha conectado |")
+        logger.info("\033[32m+----------------------------------------------+")
         logger.info(f"Archivo a descargar: {msg_file_name}")
         messages_queue = queue.Queue()
         filename = os.path.join(server_data.storage_path, msg_file_name)

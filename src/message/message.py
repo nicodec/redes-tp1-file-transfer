@@ -61,7 +61,8 @@ class Message:
             basic += f", error_code={self.get_error_code().name}"
         elif self.type == MessageType.UPLOAD:
             file_size, file_name, hash = self.get_data_as_string().split("|")
-            basic += f", file_size={file_size}, file_name={file_name}, file_hash={hash}"
+            basic += f", file_size={file_size}, file_name={file_name}, \
+                file_hash={hash}"
             logger.debug(f"hash del archivo: {hash}.")
         elif self.type == MessageType.DOWNLOAD:
             basic += f", file_name={self.get_file_name()}"
@@ -134,9 +135,9 @@ class Message:
             if len(parts) >= 2:
                 return parts[1]
         return None
-    
+
     def get_file_digest(self):
-        """Extrae el digest del archivo del mensaje"""        
+        """Extrae el digest del archivo del mensaje"""
         if self.type == MessageType.UPLOAD:
             parts = self.get_data_as_string().split("|")
             if len(parts) >= 2:
@@ -189,10 +190,11 @@ class Message:
     def ack(seq_number):
         """Crea un mensaje de confirmación"""
         return Message(MessageType.ACK, seq_number)
-    
+
     @staticmethod
     def ack_end_download_saw(seq_number, md5_digest):
-        """Crea un mensaje de confirmación de finalizacion de descarga, y contiene el digest para el cliente"""
+        """Crea un mensaje de confirmación de finalizacion de descarga, y
+        contiene el digest para el cliente"""
         data = md5_digest.encode('utf-8')
         return Message(MessageType.ACK, seq_number, data)
 
@@ -220,6 +222,7 @@ class Message:
 
     @staticmethod
     def end_download(md5_digest):
-        """Crea un mensaje de finalización de download con el digest correspondiente"""
+        """Crea un mensaje de finalización de download con el digest
+        correspondiente"""
         data = md5_digest.encode('utf-8')
         return Message(MessageType.END, 0, data)

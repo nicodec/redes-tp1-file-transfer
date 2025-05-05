@@ -1,17 +1,11 @@
 from datetime import datetime, timedelta
-import logging
 from random import randint
 import threading
 from message.message import TOTAL_BYTES_LENGTH, Message
 from utils.logger import logger
 
 
-def send_ack(secNumber, socket, address):
-    ack_message = Message.ack(secNumber)
-    send_message(ack_message, socket, address)
-
-
-def recv_message(socket, timeout = 1):
+def recv_message(socket, timeout=1):
     socket.settimeout(timeout)
     try:
         raw_message, address = socket.recvfrom(TOTAL_BYTES_LENGTH)
@@ -20,7 +14,7 @@ def recv_message(socket, timeout = 1):
     except TimeoutError:
         return None, None
 
- 
+
 def send_message(message, socket, address):
     message.set_timeout(1)
     if not lost_message():
@@ -38,7 +32,7 @@ def send_ack(secNumber, socket, address):
     send_message(ack_message, socket, address)
 
 
-def get_message_from_queue(message_queue):
+def get_message_from_queue(message_queue) -> Message | None:
     return message_queue.get(False) if not message_queue.empty() else None
 
 
