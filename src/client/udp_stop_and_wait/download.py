@@ -89,6 +89,7 @@ def download_saw_client(first_message, client_socket, server_address,
             datos_recibidos = datos_recibidos + len(datos)
             ultimo_paquete_recibido = ultimo_paquete_recibido + 1
             ack_message = Message.ack(ultimo_paquete_recibido)
+            send_message(ack_message, client_socket, server_address)
     
     # envio el ultimo ack del paquete recibido
     envie_ultimo_ack_del_paquete = False
