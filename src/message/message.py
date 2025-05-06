@@ -61,8 +61,8 @@ class Message:
             basic += f", error_code={self.get_error_code().name}"
         elif self.type == MessageType.UPLOAD:
             file_size, file_name, hash = self.get_data_as_string().split("|")
-            basic += f", file_size={file_size}, file_name={file_name}, \
-                file_hash={hash}"
+            basic += f", file_size={file_size}, file_name={file_name}, "
+            basic += f"file_hash={hash}"
             logger.debug(f"hash del archivo: {hash}.")
         elif self.type == MessageType.DOWNLOAD:
             basic += f", file_name={self.get_file_name()}"

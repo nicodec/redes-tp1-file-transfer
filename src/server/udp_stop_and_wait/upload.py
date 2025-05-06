@@ -100,16 +100,16 @@ def upload_saw_server(mensaje_inicial, sock, client_address, msg_queue, file,
             # Caso de retransmisión de ACK para un paquete anterior
             if mensaje:
                 if (mensaje.get_type() == MessageType.DATA and
-                    mensaje.get_seq_number() < secuencia_actual):
-                    logger.debug(f"Retransmitiendo ACK para el paquete \
-                                 {mensaje.get_seq_number()}.")
+                        mensaje.get_seq_number() < secuencia_actual):
+                    logger.debug(f"Retransmitiendo ACK para el paquete "
+                                 f"{mensaje.get_seq_number()}.")
                     send_ack(mensaje.get_seq_number(), sock, client_address)
 
                 # Caso de recepción del paquete esperado
                 elif (mensaje.get_type() == MessageType.DATA and
                       mensaje.get_seq_number() == secuencia_actual):
-                    logger.debug(f"Paquete {mensaje.get_seq_number()} \
-                                 recibido correctamente.")
+                    logger.debug(f"Paquete {mensaje.get_seq_number()} "
+                                 f"recibido correctamente.")
                     datos = mensaje.get_data()
                     buffer_datos.append(datos)
 
@@ -120,8 +120,8 @@ def upload_saw_server(mensaje_inicial, sock, client_address, msg_queue, file,
                         buffer_datos.clear()
 
                     bytes_recibidos += len(datos)
-                    logger.debug(f"Enviando ACK para el paquete \
-                                 {mensaje.get_seq_number()}.")
+                    logger.debug(f"Enviando ACK para el paquete "
+                                 f"{mensaje.get_seq_number()}.")
                     send_ack(mensaje.get_seq_number(), sock, client_address)
                     secuencia_actual += 1
                     paquete_recibido = True
@@ -130,13 +130,13 @@ def upload_saw_server(mensaje_inicial, sock, client_address, msg_queue, file,
     # Sin esto rompe el md5
     if buffer_datos:
         file.write(b"".join(buffer_datos))
-                
+
     file_read_for_digest: bytes
     with open(filename, 'rb') as file_read_for_digest:
         file_read_for_digest = file_read_for_digest.read()
     final_md5_digest = hashlib.md5(file_read_for_digest).hexdigest()
 
-    finalizar_servidor(sock, client_address, msg_queue, stop_event, 
+    finalizar_servidor(sock, client_address, msg_queue, stop_event,
                        final_md5_digest == msg_md5_digest)
     if file:
         file.close()

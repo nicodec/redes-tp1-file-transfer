@@ -52,8 +52,7 @@ def join_worker(worker, client_address, stop_event, file, timeout=1800):
         file.close()
 
 
-def upload(sock, client_address,
-           message, messages_queue,
+def upload(sock, client_address, message, messages_queue,
            filename, msg_md5_digest, stop_event, protocol):
     file = None
     initial_message = message
@@ -121,6 +120,7 @@ def download(sock, client_address, messages_queue,
                                messages_queue, file, md5_digest, stop_event))
     send_worker.start()
     join_worker(send_worker, client_address, stop_event, file)
+
 
 def parse_arguments():
     """Parsea los argumentos de línea de comandos"""

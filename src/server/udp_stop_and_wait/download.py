@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
-from server.udp_stop_and_wait.finalizar_servidor import finalizar_servidor, finalizar_servidor_download_saw
+from server.udp_stop_and_wait.finalizar_servidor import finalizar_servidor, \
+    finalizar_servidor_download_saw
 from message.message import DATA_MAX_SIZE, Message, MessageType
 from message.utils import (
     send_message, get_message_from_queue, show_info
@@ -9,8 +10,10 @@ from utils.logger import logger
 DATA_MAX_SIZE = DATA_MAX_SIZE
 
 
-def inicio_download_server(sock, client_address, first_message, msg_queue, stop_event):
-    """Inicia el proceso de descarga verificando errores y enviando el tamaño del archivo."""
+def inicio_download_server(sock, client_address, first_message: Message,
+                           msg_queue, stop_event):
+    """Inicia el proceso de descarga verificando errores y enviando el tamaño
+    del archivo."""
     logger.info("Iniciando protocolo de descarga.")
     error_detectado = False
 
@@ -30,12 +33,12 @@ def inicio_download_server(sock, client_address, first_message, msg_queue, stop_
     return error_detectado
 
 
-def download_saw_server(first_message, sock,
-                        client_address, msg_queue,
-                        file, md5_digest, stop_event):
+def download_saw_server(first_message: Message, sock, client_address,
+                        msg_queue, file, md5_digest, stop_event):
     """Implementa el protocolo Stop-and-Wait para la descarga de archivos."""
     start_time = datetime.now()
-    error_detectado = inicio_download_server(sock, client_address, first_message, msg_queue, stop_event)
+    error_detectado = inicio_download_server(
+        sock, client_address, first_message, msg_queue, stop_event)
 
     if error_detectado:
         return
@@ -47,7 +50,7 @@ def download_saw_server(first_message, sock,
         if stop_event.is_set():
             return
         if first_message.is_timeout():
-            logger.debug(f"Reenviando ACK inicial al cliente {client_address}.")
+            logger.debug(f"Reenviando ACK inicial al cliente {client_address}")
             send_message(first_message, sock, client_address)
         response = get_message_from_queue(msg_queue)
         if response and response.get_type() == MessageType.ACK:
@@ -57,7 +60,8 @@ def download_saw_server(first_message, sock,
     next_update = start_time + timedelta(seconds=1)
     paquete_actual = 1
     while data := file.read(DATA_MAX_SIZE):
-        next_update = show_info(first_message.get_file_size(), paquete_actual * DATA_MAX_SIZE, start_time, next_update)
+        next_update = show_info(first_message.get_file_size(), paquete_actual *
+                                DATA_MAX_SIZE, start_time, next_update)
         ack_recibido = False
         if stop_event.is_set():
             return
@@ -69,7 +73,8 @@ def download_saw_server(first_message, sock,
                 logger.debug(f"Reenviando paquete {paquete_actual}.")
                 send_message(paquete, sock, client_address)
             response = get_message_from_queue(msg_queue)
-            if response and response.get_type() == MessageType.ACK and response.get_seq_number() == paquete_actual:
+            if (response and response.get_type() == MessageType.ACK and
+                    response.get_seq_number() == paquete_actual):
                 logger.debug(f"ACK recibido para el paquete {paquete_actual}.")
                 paquete_actual += 1
                 ack_recibido = True
@@ -86,5 +91,6 @@ def download_saw_server(first_message, sock,
         response = get_message_from_queue(msg_queue)
         if response and response.get_type() == MessageType.END:
             fin_enviado = True
-            finalizar_servidor_download_saw(sock, client_address, msg_queue, stop_event, md5_digest)
+            finalizar_servidor_download_saw(sock, client_address, msg_queue,
+                                            stop_event, md5_digest)
             logger.info("Proceso de descarga finalizado.")
