@@ -42,47 +42,34 @@ def download_saw_client(first_message, client_socket, server_address,
     
     if err:
         return
-    datos_recibidos = 0
-    # espero recibir el primer paquete
-    recibi_el_primer_paquete = False
-    ack_message = Message.ack(0)
-    while not recibi_el_primer_paquete:
-        if stop_event.is_set():
-            return
-        # envio el ack del inicio del download
-        if ack_message.is_timeout():
-            send_message(ack_message, client_socket, server_address)
-            
-        message = get_message_from_queue(message_queue)
-
-        if message and message.get_type() == MessageType.DATA and message.get_seq_number() == 1:
-            datos = message.get_data()
-            recibi_el_primer_paquete = True
-
     
-    ultimo_paquete_recibido = 1
-    datos_recibidos = len(datos)
-    file.write(datos)
-
-    #set up progress tracking
-    next_udpate = datetime.now() + timedelta(seconds=1)
+    datos_recibidos = 0
+    ultimo_paquete_recibido = 0  # Empezamos en 0, esperando el paquete 1
+    next_update = datetime.now() + timedelta(seconds=1)
     ack_message = Message.ack(ultimo_paquete_recibido)
     
     while datos_recibidos < tamanio_del_archivo:
-        next_udpate = show_info(tamanio_del_archivo, datos_recibidos, start_time, next_udpate)
+        next_update = show_info(tamanio_del_archivo, datos_recibidos, start_time, next_update)
         
         if stop_event.is_set():
             return
         
-        # Mando el ack del ultimo paquete que recibi
+        # Mando el ack del ultimo paquete que recibi si es necesario
         if ack_message.is_timeout():
             logger.debug(f'Envio ACK {ack_message.get_seq_number()}')
             send_message(ack_message, client_socket, server_address)
 
-        # espero y recibo el siguiente paquete
+        # Espero y recibo el siguiente paquete
         message = get_message_from_queue(message_queue)
 
-        if message and message.get_type() == MessageType.DATA and message.get_seq_number() == ultimo_paquete_recibido + 1:
+        # Caso de retransmisión de ACK para un paquete anterior (duplicado)
+        if message and message.get_type() == MessageType.DATA and message.get_seq_number() < ultimo_paquete_recibido + 1:
+            logger.debug(f'Recibi paquete duplicado {message.get_seq_number()}, reenvio ACK')
+            ack_message = Message.ack(message.get_seq_number())
+            send_message(ack_message, client_socket, server_address)
+        
+        # Caso de recepción del paquete esperado
+        elif message and message.get_type() == MessageType.DATA and message.get_seq_number() == ultimo_paquete_recibido + 1:
             logger.debug(f'Recibo el paquete {message.get_seq_number()}')
             datos = message.get_data()
             file.write(datos)
