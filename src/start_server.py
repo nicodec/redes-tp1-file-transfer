@@ -231,8 +231,8 @@ def start_server():
     # Crear directorio de almacenamiento si no existe
     if not os.path.exists(server_data.storage_path):
         os.makedirs(server_data.storage_path)
-        logger.info(f"Directorio de almacenamiento creado: \
-                    {server_data.storage_path}")
+        logger.info(f"Directorio de almacenamiento creado: "
+                    f"{server_data.storage_path}")
 
     # Crear socket UDP
     server_data.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
