@@ -165,7 +165,7 @@ class Message:
 
     def set_timeout(self, timeout):
         """Establece un nuevo tiempo de expiración"""
-        self.timeout_time = datetime.now() + timedelta(seconds=timeout)
+        self.timeout_time = datetime.now() + timedelta(milliseconds=timeout * 1000)
 
     # Métodos de fábrica estáticos para crear mensajes específicos
 

@@ -76,7 +76,7 @@ def upload_saw_client(mensaje_inicial: Message, client_socket, server_address,
                 return
             if paquete.is_timeout():
                 logger.debug(f"Reenviando paquete {secuencia}.")
-                send_message(paquete, client_socket, server_address)
+                send_message(paquete, client_socket, server_address, 0.3)
 
             respuesta = get_message_from_queue(msg_queue)
             if (respuesta and respuesta.get_type() == MessageType.ACK and
