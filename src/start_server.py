@@ -97,8 +97,8 @@ def download(sock, client_address, messages_queue,
     if not os.path.exists(filename):
         logger.error(f"El archivo {filename} no se ha encontrado.")
         first_message = Message.error(ErrorCode.FILE_NOT_FOUND)
-        messages_queue.put(first_message)
-        return
+        # messages_queue.put(first_message)
+        # return
     else:
         file = open(filename, "rb")
         file_size = os.path.getsize(filename)
@@ -231,8 +231,8 @@ def start_server():
     # Crear directorio de almacenamiento si no existe
     if not os.path.exists(server_data.storage_path):
         os.makedirs(server_data.storage_path)
-        logger.info(f"Directorio de almacenamiento creado: \
-                    {server_data.storage_path}")
+        logger.info(f"Directorio de almacenamiento creado: "
+                    f"{server_data.storage_path}")
 
     # Crear socket UDP
     server_data.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
