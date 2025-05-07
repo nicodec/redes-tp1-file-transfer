@@ -64,7 +64,7 @@ def download_saw_client(first_message, client_socket, server_address,
             send_message(ack_message, client_socket, server_address)
 
         # espero y recibo el siguiente paquete
-        message = get_message_from_queue(message_queue)
+        message = get_message_from_queue(msg_queue)
 
         # Caso de retransmisión de ACK para un paquete anterior (duplicado)
         if message and message.get_type() == MessageType.DATA and message.get_seq_number() < ultimo_paquete_recibido:
