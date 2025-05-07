@@ -44,7 +44,7 @@ def download_saw_client(first_message, client_socket, server_address,
         return
     
     datos_recibidos = 0
-    ultimo_paquete_recibido = 0  # Empezamos en 0, esperando el paquete 1
+    ultimo_paquete_recibido = 1
     next_update = datetime.now() + timedelta(seconds=1)
     ack_message = Message.ack(ultimo_paquete_recibido)
     
@@ -63,13 +63,13 @@ def download_saw_client(first_message, client_socket, server_address,
         message = get_message_from_queue(message_queue)
 
         # Caso de retransmisión de ACK para un paquete anterior (duplicado)
-        if message and message.get_type() == MessageType.DATA and message.get_seq_number() < ultimo_paquete_recibido + 1:
+        if message and message.get_type() == MessageType.DATA and message.get_seq_number() < ultimo_paquete_recibido:
             logger.debug(f'Recibi paquete duplicado {message.get_seq_number()}, reenvio ACK')
             ack_message = Message.ack(message.get_seq_number())
             send_message(ack_message, client_socket, server_address)
         
         # Caso de recepción del paquete esperado
-        elif message and message.get_type() == MessageType.DATA and message.get_seq_number() == ultimo_paquete_recibido + 1:
+        elif message and message.get_type() == MessageType.DATA and message.get_seq_number() == ultimo_paquete_recibido:
             logger.debug(f'Recibo el paquete {message.get_seq_number()}')
             datos = message.get_data()
             file.write(datos)

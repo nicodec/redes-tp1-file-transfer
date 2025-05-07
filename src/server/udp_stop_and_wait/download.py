@@ -66,6 +66,7 @@ def download_saw_server(first_message: Message, sock, client_address,
         if stop_event.is_set():
             return
         paquete = Message.data(paquete_actual, data)
+        
         while not ack_recibido:
             if stop_event.is_set():
                 return
@@ -74,11 +75,10 @@ def download_saw_server(first_message: Message, sock, client_address,
                 send_message(paquete, sock, client_address)
             response = get_message_from_queue(msg_queue)
             if (response and response.get_type() == MessageType.ACK and
-                    response.get_seq_number() == paquete_actual):
+                    response.get_seq_number() == paquete_actual + 1):
                 logger.debug(f"ACK recibido para el paquete {paquete_actual}.")
                 paquete_actual += 1
                 ack_recibido = True
-                paquete = Message.data(paquete_actual, data)
 
     # Finalizar la transferencia
     fin_enviado = False

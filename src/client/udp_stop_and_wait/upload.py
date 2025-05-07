@@ -65,7 +65,7 @@ def upload_saw_client(mensaje_inicial, client_socket, server_address, msg_queue,
                 send_message(paquete, client_socket, server_address)
 
             respuesta = get_message_from_queue(msg_queue)
-            if respuesta and respuesta.get_type() == MessageType.ACK and respuesta.get_seq_number() == secuencia:
+            if respuesta and respuesta.get_type() == MessageType.ACK and respuesta.get_seq_number() == secuencia + 1:
                 logger.debug(f"ACK recibido para el paquete {secuencia}.")
                 bytes_enviados += len(datos)
                 secuencia += 1

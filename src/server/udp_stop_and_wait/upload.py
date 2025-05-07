@@ -72,6 +72,7 @@ def upload_saw_server(mensaje_inicial, sock, client_address, msg_queue, file,
 
     bytes_recibidos = 0
     secuencia_actual = 1
+    ack_message = Message.ack(secuencia_actual)
     proxima_actualizacion = inicio + timedelta(seconds=1)
     buffer_datos = []
 
