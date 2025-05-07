@@ -97,8 +97,8 @@ def download(sock, client_address, messages_queue,
     if not os.path.exists(filename):
         logger.error(f"El archivo {filename} no se ha encontrado.")
         first_message = Message.error(ErrorCode.FILE_NOT_FOUND)
-        messages_queue.put(first_message)
-        return
+        # messages_queue.put(first_message)
+        # return
     else:
         file = open(filename, "rb")
         file_size = os.path.getsize(filename)
