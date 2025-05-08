@@ -1,3 +1,4 @@
+import time
 from client.udp_stop_and_wait.finalizar_cliente import finalizar_cliente
 from message.message import DATA_MAX_SIZE, Message, MessageType, ErrorCode
 from datetime import datetime, timedelta
@@ -71,6 +72,8 @@ def upload_saw_client(mensaje_inicial: Message, client_socket, server_address,
             return
 
         paquete = Message.data(secuencia, datos)
+        logger.debug(f"Enviando paquete {secuencia}.")
+        send_message(paquete, client_socket, server_address)
         while not ack_recibido:
             if stop_event.is_set():
                 return
@@ -85,5 +88,7 @@ def upload_saw_client(mensaje_inicial: Message, client_socket, server_address,
                 bytes_enviados += len(datos)
                 secuencia += 1
                 ack_recibido = True
+            elif not respuesta:
+                time.sleep(0.001)
 
     finalizar_cliente(client_socket, server_address, msg_queue, stop_event)

@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import hashlib
 import os
+import time
 from server.udp_stop_and_wait.finalizar_servidor import finalizar_servidor
 from message.message import Message, MessageType
 from message.utils import (
@@ -74,7 +75,6 @@ def upload_saw_server(mensaje_inicial, sock, client_address, msg_queue, file,
     secuencia_actual = 1
     proxima_actualizacion = inicio + timedelta(seconds=1)
     buffer_datos = []
-
     while bytes_recibidos < mensaje_inicial.get_file_size():
         proxima_actualizacion = show_info(
             mensaje_inicial.get_file_size(), bytes_recibidos, inicio,
@@ -109,6 +109,10 @@ def upload_saw_server(mensaje_inicial, sock, client_address, msg_queue, file,
                       mensaje.get_seq_number() == secuencia_actual):
                     logger.debug(f"Paquete {mensaje.get_seq_number()} "
                                  f"recibido correctamente.")
+                    logger.debug(f"Enviando ACK para el paquete "
+                                 f"{mensaje.get_seq_number()}.")
+                    send_ack(mensaje.get_seq_number(), sock, client_address)
+
                     datos = mensaje.get_data()
                     buffer_datos.append(datos)
 
@@ -119,11 +123,10 @@ def upload_saw_server(mensaje_inicial, sock, client_address, msg_queue, file,
                         buffer_datos.clear()
 
                     bytes_recibidos += len(datos)
-                    logger.debug(f"Enviando ACK para el paquete "
-                                 f"{mensaje.get_seq_number()}.")
-                    send_ack(mensaje.get_seq_number(), sock, client_address)
                     secuencia_actual += 1
                     paquete_recibido = True
+            else:
+                time.sleep(0.001)
 
     # Escribir cualquier dato restante en el buffer
     # Sin esto rompe el md5
