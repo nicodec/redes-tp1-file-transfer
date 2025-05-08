@@ -46,18 +46,19 @@ def download_saw_client(first_message, client_socket, server_address,
 
     if err:
         return
-    
+
     datos_recibidos = 0
     ultimo_paquete_recibido = 0  # Empezamos en 0, esperando el paquete 1
     next_update = datetime.now() + timedelta(seconds=1)
     ack_message = Message.ack(ultimo_paquete_recibido)
 
     while datos_recibidos < tamanio_del_archivo:
-        next_update = show_info(tamanio_del_archivo, datos_recibidos, start_time, next_update)
-        
+        next_update = show_info(
+            tamanio_del_archivo, datos_recibidos, start_time, next_update)
+
         if stop_event.is_set():
             return
-        
+
         # Mando el ack del ultimo paquete que recibi si es necesario
         if ack_message.is_timeout():
             logger.debug(f'Envio ACK {ack_message.get_seq_number()}')
@@ -67,13 +68,16 @@ def download_saw_client(first_message, client_socket, server_address,
         message = get_message_from_queue(msg_queue)
 
         # Caso de retransmisión de ACK para un paquete anterior (duplicado)
-        if message and message.get_type() == MessageType.DATA and message.get_seq_number() < ultimo_paquete_recibido + 1:
-            logger.debug(f'Recibi paquete duplicado {message.get_seq_number()}, reenvio ACK')
+        if (message and message.get_type() == MessageType.DATA and
+                message.get_seq_number() < ultimo_paquete_recibido + 1):
+            logger.debug(f"Recibi paquete duplicado "
+                         f"{message.get_seq_number()}, reenvio ACK")
             ack_message = Message.ack(message.get_seq_number())
             send_message(ack_message, client_socket, server_address)
-        
+
         # Caso de recepción del paquete esperado
-        elif message and message.get_type() == MessageType.DATA and message.get_seq_number() == ultimo_paquete_recibido + 1:
+        elif (message and message.get_type() == MessageType.DATA and
+              message.get_seq_number() == ultimo_paquete_recibido + 1):
             logger.debug(f'Recibo el paquete {message.get_seq_number()}')
             datos = message.get_data()
             file.write(datos)

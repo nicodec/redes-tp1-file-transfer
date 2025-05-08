@@ -86,42 +86,44 @@ def upload_saw_server(mensaje_inicial, sock, client_address, msg_queue, file,
                 os.remove(filename)
             return
 
-        # Mando el ack del ultimo paquete que recibi si es necesario
-        if ack_message.is_timeout():
-            logger.debug(f'Envio ACK {ack_message.get_seq_number()}')
-            send_message(ack_message, sock, client_address)
+        paquete_recibido = False
+        while not paquete_recibido:
+            if stop_event.is_set():
+                if file:
+                    file.close()
+                    os.remove(filename)
+                return
 
-        mensaje = get_message_from_queue(msg_queue)
+            mensaje = get_message_from_queue(msg_queue)
 
-        # Caso de retransmisión de ACK para un paquete anterior (duplicado)
-        if mensaje:
-            if (mensaje.get_type() == MessageType.DATA and
-                    mensaje.get_seq_number() < secuencia_actual):
-                logger.debug(f"Retransmitiendo ACK para el paquete "
-                                f"{mensaje.get_seq_number()}.")
-                ack_message = Message.ack(mensaje.get_seq_number())
-                send_message(ack_message, sock, client_address)
+            # Caso de retransmisión de ACK para un paquete anterior
+            if mensaje:
+                if (mensaje.get_type() == MessageType.DATA and
+                        mensaje.get_seq_number() < secuencia_actual):
+                    logger.debug(f"Retransmitiendo ACK para el paquete "
+                                 f"{mensaje.get_seq_number()}.")
+                    send_ack(mensaje.get_seq_number(), sock, client_address)
 
-            # Caso de recepción del paquete esperado
-            elif (mensaje.get_type() == MessageType.DATA and
-                    mensaje.get_seq_number() == secuencia_actual):
-                logger.debug(f"Paquete {mensaje.get_seq_number()} "
-                                f"recibido correctamente.")
-                datos = mensaje.get_data()
-                buffer_datos.append(datos)
+                # Caso de recepción del paquete esperado
+                elif (mensaje.get_type() == MessageType.DATA and
+                      mensaje.get_seq_number() == secuencia_actual):
+                    logger.debug(f"Paquete {mensaje.get_seq_number()} "
+                                 f"recibido correctamente.")
+                    datos = mensaje.get_data()
+                    buffer_datos.append(datos)
 
-                # Escribir en el archivo si el buffer
-                # alcanza un tamaño considerable
-                if sum(len(chunk) for chunk in buffer_datos) > 50000:
-                    file.write(b"".join(buffer_datos))
-                    buffer_datos.clear()
+                    # Escribir en el archivo si el buffer
+                    # alcanza un tamaño considerable
+                    if sum(len(chunk) for chunk in buffer_datos) > 50000:
+                        file.write(b"".join(buffer_datos))
+                        buffer_datos.clear()
 
-                bytes_recibidos += len(datos)
-                secuencia_actual += 1
-                logger.debug(f"Enviando ACK para el paquete "
-                                f"{mensaje.get_seq_number()}.")
-                ack_message = Message.ack(secuencia_actual)
-                send_message(ack_message, sock, client_address)
+                    bytes_recibidos += len(datos)
+                    logger.debug(f"Enviando ACK para el paquete "
+                                 f"{mensaje.get_seq_number()}.")
+                    send_ack(mensaje.get_seq_number(), sock, client_address)
+                    secuencia_actual += 1
+                    paquete_recibido = True
 
     # Escribir cualquier dato restante en el buffer
     # Sin esto rompe el md5
