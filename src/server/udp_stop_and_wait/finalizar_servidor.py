@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from message.message import Message, MessageType
 from message.utils import send_message, get_message_from_queue
 
@@ -13,7 +14,9 @@ def finalizar_servidor_download_saw(sock, client_address, msg_queue,
 
     recibi_nuevamente_fin = (not message or
                              message.get_type() == MessageType.END)
-    while recibi_nuevamente_fin:
+    
+    timeout = datetime.now() + timedelta(seconds=3)
+    while recibi_nuevamente_fin and timeout > datetime.now():
         if stop_event.is_set():
             return
         if ack_message.is_timeout():
@@ -21,6 +24,8 @@ def finalizar_servidor_download_saw(sock, client_address, msg_queue,
         response = get_message_from_queue(msg_queue)
         recibi_nuevamente_fin = (not response or
                                  response.get_type() == MessageType.END)
+    
+    return
 
 
 def finalizar_servidor(sock, client_address, msg_queue, stop_event,
@@ -36,7 +41,8 @@ def finalizar_servidor(sock, client_address, msg_queue, stop_event,
 
     recibi_nuevamente_fin = (not message or
                              message.get_type() == MessageType.END)
-    while recibi_nuevamente_fin:
+    timeout = datetime.now() + timedelta(seconds=3)
+    while recibi_nuevamente_fin and timeout > datetime.now():
         if stop_event.is_set():
             return
         if ack_message.is_timeout():
