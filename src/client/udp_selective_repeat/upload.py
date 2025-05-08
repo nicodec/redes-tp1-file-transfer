@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from message.message import (
     TOTAL_BYTES_LENGTH, DATA_MAX_SIZE, Message, MessageType
 )
-from message.utils import send_message_sr, show_info
+from message.utils import show_info, send_message
 from utils.protocol_utils import (
     send_first_ack_download_message,
     read_file,
@@ -57,10 +57,10 @@ def upload_sr_client(initial_message: Message, socket, address, message_queue,
                 logger.debug(f"i : {i} and {acknowledgements[i]}")
                 sended_messages[i] = Message.data(i, read_file(
                     file, DATA_MAX_SIZE, i))
-                send_message_sr(sended_messages[i], socket, address)
+                send_message(sended_messages[i], socket, address, 1.5)
             if (sended_messages[i] and sended_messages[i].is_timeout() and
                     not acknowledgements[i]):
-                send_message_sr(sended_messages[i], socket, address)
+                send_message(sended_messages[i], socket, address, 1.5)
 
         message = (message_queue.get(False) if not message_queue.empty()
                    else None)
