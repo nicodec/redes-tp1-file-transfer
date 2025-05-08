@@ -21,6 +21,12 @@ def send_message(message, socket, address):
         bytes_to_send = message.to_bytes()
         socket.sendto(bytes_to_send, address)
 
+def send_message_sr(message, socket, address):
+    message.set_timeout(1.5)
+    if not lost_message():
+        bytes_to_send = message.to_bytes()
+        socket.sendto(bytes_to_send, address)
+
 
 def lost_message():
     random_number = randint(0, 100)
