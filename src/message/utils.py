@@ -16,7 +16,7 @@ def recv_message(socket, timeout=1):
 
 
 def send_message(message, socket, address):
-    message.set_timeout(1)
+    message.set_timeout(0.1)
     if not lost_message():
         bytes_to_send = message.to_bytes()
         socket.sendto(bytes_to_send, address)

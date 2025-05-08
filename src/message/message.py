@@ -3,7 +3,8 @@ from datetime import datetime, timedelta
 from utils.logger import logger
 
 SEQUENCE_NUMBER_BYTES = 4
-DATA_MAX_SIZE = 2048
+DATA_MAX_SIZE = 8192
+
 TOTAL_BYTES_LENGTH = 1 + SEQUENCE_NUMBER_BYTES + DATA_MAX_SIZE
 
 
