@@ -164,6 +164,7 @@ def send_first_download_message(message, socket, address, message_queue,
     elif download_response.get_type() == MessageType.ERROR:
         if download_response.get_error_code() == ErrorCode.FILE_NOT_FOUND:
             logger.error("El archivo no se ha encontrado en el servidor")
+            return None, None
         return send_message_and_wait(
             Message.ack(download_response.get_seq_number()), socket, address,
             message_queue, stop_event, [MessageType.ACK]), download_response
